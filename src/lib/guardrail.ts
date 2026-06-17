@@ -1,49 +1,64 @@
-import type { EscalationRates, Item, PhaseId } from '../types'
-import { escalatedCost } from './escalation'
+import type { Item, PhaseId } from '../types'
 import { PHASE_BY_ID } from './phases'
 
-// Soft per-phase capacity = what an NBA construction window can physically
-// absorb. Configurable constants; offseason holds more than during-season.
-// (Reference: Crypto.com Arena ran ~50-65 interrupted workdays per phase,
-// midnight-10am. We warn, never hard-block.)
+// Soft per-phase capacity = the physical work volume an NBA construction window
+// can absorb, measured in 2025 base dollars (a throughput proxy — escalation
+// must NOT inflate the load against a fixed ceiling). Offseason windows hold
+// more than during-season windows. Configurable; we warn, never hard-block.
+//
+// Reference point (tooltip): Crypto.com Arena ran ~50-65 interrupted workdays
+// per phase, midnight-10am.
 export interface CapacityConfig {
-  offseasonDollars: number
-  duringSeasonDollars: number
-  // CONT spans all windows, so no single-window ceiling applies.
+  offseasonBase: number
+  duringSeasonBase: number
 }
 
 export const DEFAULT_CAPACITY: CapacityConfig = {
-  offseasonDollars: 45_000_000,
-  duringSeasonDollars: 18_000_000,
+  offseasonBase: 50_000_000,
+  duringSeasonBase: 8_000_000,
 }
 
 export function phaseCapacity(phase: PhaseId, cfg = DEFAULT_CAPACITY): number | null {
   const def = PHASE_BY_ID[phase]
-  if (def.kind === 'continuous') return null
-  if (def.kind === 'offseason') return cfg.offseasonDollars
-  return cfg.duringSeasonDollars
+  if (def.kind === 'continuous') return null // spans all windows — no single ceiling
+  return def.kind === 'offseason' ? cfg.offseasonBase : cfg.duringSeasonBase
 }
 
 export interface PhaseLoad {
-  escalated: number
+  baseLoad: number // included base $ assigned to the phase
   count: number
   capacity: number | null
   overloaded: boolean
+  utilization: number // baseLoad / capacity (0 when no capacity)
 }
 
+// Physical load = included base dollars in the phase (escalation excluded).
 export function phaseLoad(
   phase: PhaseId,
-  items: Item[],
-  rates: EscalationRates,
+  itemsInPhase: Item[],
   cfg = DEFAULT_CAPACITY,
 ): PhaseLoad {
-  const inPhase = items.filter((it) => it.phase === phase && it.included)
-  const escalated = inPhase.reduce((sum, it) => sum + escalatedCost(it, rates), 0)
+  const included = itemsInPhase.filter((it) => it.included)
+  const baseLoad = included.reduce((sum, it) => sum + it.base, 0)
   const capacity = phaseCapacity(phase, cfg)
   return {
-    escalated,
-    count: inPhase.length,
+    baseLoad,
+    count: included.length,
     capacity,
-    overloaded: capacity !== null && escalated > capacity,
+    overloaded: capacity !== null && baseLoad > capacity,
+    utilization: capacity ? baseLoad / capacity : 0,
   }
 }
+
+// Phase-kind-aware warning text (orange ⚠ guardrail — alerts only).
+export function overloadMessage(phase: PhaseId): string {
+  const def = PHASE_BY_ID[phase]
+  return def.kind === 'offseason'
+    ? 'Exceeds typical offseason window throughput.'
+    : 'Exceeds what an NBA during-season window can absorb.'
+}
+
+export const CAPACITY_TOOLTIP =
+  'Soft capacity = physical work an NBA window can absorb (2025 base $). ' +
+  'Reference: Crypto.com Arena ran ~50–65 interrupted workdays per phase, ' +
+  'midnight–10am. This is a non-blocking warning, not a hard limit.'

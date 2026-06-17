@@ -36,8 +36,11 @@ export const SCENARIOS: ScenarioDef[] = [
   },
 ]
 
-// During-season phases — Capacity Protect empties these of bowl-stadia work.
-const DURING_SEASON: PhaseId[] = ['1DS', '2DS', '3DS']
+// Ancillary, non-guest-facing scope that Affordability designates deferrable
+// (support/BOH/circulation + cosmetic overlay refreshes). Required systems are
+// never touched. This is the optioneering judgment the tool exists to express.
+const ANCILLARY =
+  /balance of event|guest services|coat check|stairwells|\bboh\b|boh spaces|support areas|mechanical|sound treatments|garage rework|exterior wall/i
 
 // The seeded baseline, always rebuilt fresh from source data.
 function freshBaseline(): Item[] {
@@ -54,31 +57,32 @@ export function applyScenario(scenario: ScenarioId, _current: Item[]): Item[] {
       return items
 
     case 'capacity-protect':
-      // Move L300/L400 bowl-stadia (club & suite) items out of during-season
-      // phases into the matching offseason of the same year.
+      // Pull every during-season task into the matching offseason of the SAME
+      // window/year. Empties the game-night windows; because each move stays in
+      // the same year, it does so at ~zero escalation premium.
       return items.map((it) => {
-        if (
-          (it.level === 'L300' || it.level === 'L400') &&
-          DURING_SEASON.includes(it.phase)
-        ) {
-          const os = it.phase.replace('DS', 'OS') as PhaseId
-          return { ...it, phase: os }
+        if (it.phase.endsWith('DS')) {
+          return { ...it, phase: it.phase.replace('DS', 'OS') as PhaseId }
         }
         return it
       })
 
     case 'affordability':
-      // Exclude everything currently marked deferrable.
+      // Mark the ancillary, non-revenue scope deferrable and exclude it —
+      // showing the affordable floor. Required building systems are protected.
       return items.map((it) =>
-        it.status === 'deferrable' ? { ...it, included: false } : it,
+        it.status !== 'required' && ANCILLARY.test(it.name)
+          ? { ...it, status: 'deferrable', included: false }
+          : it,
       )
 
     case 'premium-accelerate':
-      // Pull L300/L400 premium club items into earlier phases (-> 1OS).
+      // Pull L300/L400 premium club & suite work into the first offseason to
+      // open the new premium product as early as possible (watch 1OS capacity).
       return items.map((it) => {
         if (
           (it.level === 'L300' || it.level === 'L400') &&
-          (it.phase === '3OS' || it.phase === '3DS' || it.phase === '2DS')
+          ['2OS', '2DS', '3OS', '3DS'].includes(it.phase)
         ) {
           return { ...it, phase: '1OS' as PhaseId }
         }

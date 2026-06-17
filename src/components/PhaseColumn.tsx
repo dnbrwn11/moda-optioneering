@@ -4,6 +4,11 @@ import type { PhaseDef } from '../lib/phases'
 import { useStore } from '../store'
 import { escalatedCost } from '../lib/escalation'
 import { fmtMillions } from '../lib/format'
+import {
+  CAPACITY_TOOLTIP,
+  overloadMessage,
+  phaseLoad,
+} from '../lib/guardrail'
 import ScopeCard from './ScopeCard'
 
 interface Props {
@@ -21,6 +26,7 @@ export default function PhaseColumn({ phase, items }: Props) {
     (sum, it) => sum + escalatedCost(it, rates),
     0,
   )
+  const load = phaseLoad(phase.id, items)
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault()
@@ -41,7 +47,11 @@ export default function PhaseColumn({ phase, items }: Props) {
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
       className={`flex w-64 shrink-0 flex-col rounded-lg border bg-[#f7f7f6] transition-colors ${
-        dragOver ? 'border-pcl-green bg-pcl-green/5' : 'border-pcl-light'
+        load.overloaded
+          ? 'border-pcl-orange'
+          : dragOver
+            ? 'border-pcl-green bg-pcl-green/5'
+            : 'border-pcl-light'
       }`}
     >
       {/* Header */}
@@ -60,6 +70,21 @@ export default function PhaseColumn({ phase, items }: Props) {
             {fmtMillions(subtotal)}
           </span>
         </div>
+
+        {/* Guardrail — non-blocking amber/orange overload warning (alerts only) */}
+        {load.overloaded && (
+          <div
+            className="mt-2 flex items-start gap-1.5 rounded border border-pcl-orange/40 bg-pcl-orange/10 px-2 py-1.5"
+            title={CAPACITY_TOOLTIP}
+          >
+            <span className="text-sm leading-none text-pcl-orange" aria-hidden>
+              ⚠
+            </span>
+            <span className="text-[10px] font-medium leading-tight text-pcl-orange">
+              {overloadMessage(phase.id)}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Cards */}
