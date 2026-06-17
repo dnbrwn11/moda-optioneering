@@ -1,4 +1,10 @@
-import type { ContAllocation, EscalationRates, Item, Year } from '../types'
+import type {
+  ContAllocation,
+  EscalationRates,
+  Item,
+  PhaseId,
+  Year,
+} from '../types'
 import { CONT_YEARS, PHASE_BY_ID } from './phases'
 
 // Compounding multiplier from base year 2025 to the end of `year`.
@@ -45,13 +51,27 @@ export interface Totals {
   totalCount: number
   // escalated spend landing in each calendar year (CONT split across thirds)
   spendByYear: Record<Year, number>
+  // escalated discrete-scope subtotal per time-window phase (CONT excluded)
+  phaseSubtotals: Record<PhaseId, number>
+  // total escalated cost of all continuous (CONT) items — spread across phases
+  continuousTotal: number
 }
 
 export function computeTotals(items: Item[], rates: EscalationRates): Totals {
   let baseTotal = 0
   let escalatedTotal = 0
   let includedCount = 0
+  let continuousTotal = 0
   const spendByYear: Record<Year, number> = { 2026: 0, 2027: 0, 2028: 0, 2029: 0 }
+  const phaseSubtotals: Record<PhaseId, number> = {
+    '1OS': 0,
+    '1DS': 0,
+    '2OS': 0,
+    '2DS': 0,
+    '3OS': 0,
+    '3DS': 0,
+    CONT: 0,
+  }
 
   for (const item of items) {
     if (!item.included) continue
@@ -59,10 +79,12 @@ export function computeTotals(items: Item[], rates: EscalationRates): Totals {
     baseTotal += item.base
     const esc = escalatedCost(item, rates)
     escalatedTotal += esc
+    phaseSubtotals[item.phase] += esc
 
     const def = PHASE_BY_ID[item.phase]
     if (def.year === null) {
       // CONT — each year's allocated portion lands in that year, escalated.
+      continuousTotal += esc
       for (const y of CONT_YEARS) {
         spendByYear[y] += item.base * (item.alloc[y] / 100) * yearMultiplier(y, rates)
       }
@@ -77,5 +99,7 @@ export function computeTotals(items: Item[], rates: EscalationRates): Totals {
     includedCount,
     totalCount: items.length,
     spendByYear,
+    phaseSubtotals,
+    continuousTotal,
   }
 }

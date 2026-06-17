@@ -1,6 +1,7 @@
 import Header from './components/Header'
 import HeadlineBar from './components/HeadlineBar'
 import EscalationStrip from './components/EscalationStrip'
+import SummaryPanel from './components/SummaryPanel'
 import Board from './components/Board'
 import ContinuousSection from './components/ContinuousSection'
 
@@ -10,6 +11,7 @@ export default function App() {
       <Header />
       <HeadlineBar />
       <EscalationStrip />
+      <SummaryPanel />
       <main className="min-h-0 flex-1 overflow-y-auto">
         <Board />
         <ContinuousSection />
