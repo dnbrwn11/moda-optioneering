@@ -1,33 +1,34 @@
 import { create } from 'zustand'
 import type {
+  ContYear,
   EscalationRates,
   Item,
   ItemStatus,
   PhaseId,
-  ScenarioId,
   Year,
 } from './types'
 import rawData from './data/lineitems.json'
 import type { LineItemData } from './types'
 import { buildItems, DEFAULT_RATES } from './lib/seeding'
 import { computeTotals } from './lib/escalation'
-import { applyScenario as applyScenarioState } from './lib/scenarios'
+import { rebalanceAlloc } from './lib/alloc'
+import { DEFAULT_CONT_ALLOC } from './lib/phases'
 
 const data = rawData as LineItemData
 
 interface AppState {
   items: Item[]
   rates: EscalationRates
-  // Seeded default scenario escalated total, captured on load (for Δ vs baseline).
+  // Seeded default escalated total, captured on load (for Δ vs baseline).
   baselineEscalatedTotal: number
-  activeScenario: ScenarioId
 
   setRate: (year: Year, rate: number) => void
   resetRates: () => void
   moveItem: (id: string, phase: PhaseId) => void
   toggleIncluded: (id: string) => void
   setStatus: (id: string, status: ItemStatus) => void
-  applyScenario: (scenario: ScenarioId) => void
+  // Set one CONT year's % for an item; the other two rebalance to keep sum 100.
+  setAlloc: (id: string, year: ContYear, value: number) => void
 }
 
 const initialItems = buildItems(data)
@@ -77,7 +78,6 @@ export const useStore = create<AppState>((set) => ({
   items: initialItems,
   rates: { ...DEFAULT_RATES },
   baselineEscalatedTotal: initialTotals.escalatedTotal,
-  activeScenario: 'baseline',
 
   setRate: (year, rate) =>
     set((state) => ({ rates: { ...state.rates, [year]: rate } })),
@@ -86,7 +86,15 @@ export const useStore = create<AppState>((set) => ({
 
   moveItem: (id, phase) =>
     set((state) => ({
-      items: state.items.map((it) => (it.id === id ? { ...it, phase } : it)),
+      items: state.items.map((it) => {
+        if (it.id !== id) return it
+        // Moving into CONT with no meaningful split? seed the default.
+        const alloc =
+          phase === 'CONT' && it.alloc == null
+            ? { ...DEFAULT_CONT_ALLOC }
+            : it.alloc
+        return { ...it, phase, alloc }
+      }),
     })),
 
   toggleIncluded: (id) =>
@@ -101,10 +109,11 @@ export const useStore = create<AppState>((set) => ({
       items: state.items.map((it) => (it.id === id ? { ...it, status } : it)),
     })),
 
-  applyScenario: (scenario) =>
+  setAlloc: (id, year, value) =>
     set((state) => ({
-      items: applyScenarioState(scenario, state.items),
-      activeScenario: scenario,
+      items: state.items.map((it) =>
+        it.id === id ? { ...it, alloc: rebalanceAlloc(it.alloc, year, value) } : it,
+      ),
     })),
 }))
 

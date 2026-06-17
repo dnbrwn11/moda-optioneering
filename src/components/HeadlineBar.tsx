@@ -1,11 +1,6 @@
 import { useStore } from '../store'
 import { useTotals } from '../lib/selectors'
-import {
-  fmtDeltaMillions,
-  fmtDeltaPct,
-  fmtFull,
-  fmtMillions,
-} from '../lib/format'
+import { fmtDeltaMillions, fmtDeltaPct, fmtMillions } from '../lib/format'
 
 interface StatProps {
   label: string
@@ -45,7 +40,7 @@ export default function HeadlineBar() {
     delta > 0 ? 'text-pcl-dark' : delta < 0 ? 'text-pcl-green' : 'text-pcl-mid'
 
   return (
-    <div className="grid grid-cols-2 divide-x divide-pcl-light border-b border-pcl-light bg-white md:grid-cols-5">
+    <div className="grid grid-cols-2 divide-x divide-pcl-light border-b border-pcl-light bg-white md:grid-cols-4">
       <Stat label="Total Escalated Cost" hero>
         {fmtMillions(totals.escalatedTotal)}
       </Stat>
@@ -61,20 +56,9 @@ export default function HeadlineBar() {
         </span>
       </Stat>
 
-      <Stat
-        label="Items Included"
-        sub={`of ${totals.totalCount} scope items`}
-      >
+      <Stat label="Items Included" sub={`of ${totals.totalCount} scope items`}>
         {totals.includedCount} / {totals.totalCount}
       </Stat>
-
-      {/* v2 placeholder — Net Seat Impact. Shows "—" for now. */}
-      <Stat label="Net Seat Impact" sub="v2 — coming soon">
-        <span className="text-pcl-mid">—</span>
-      </Stat>
-
-      {/* Baseline reference, tucked small (full $ for the curious). */}
-      <div className="col-span-2 hidden">{fmtFull(baseline)}</div>
     </div>
   )
 }

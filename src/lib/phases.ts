@@ -1,4 +1,4 @@
-import type { PhaseId, Year } from '../types'
+import type { ContAllocation, ContYear, PhaseId, Year } from '../types'
 
 // Ordered phases (the OS/DS map from Image 1), each mapped to a calendar year.
 // CONT spreads evenly across 2027/2028/2029 (year = null sentinel).
@@ -29,6 +29,10 @@ export const PHASE_BY_ID: Record<PhaseId, PhaseDef> = PHASES.reduce(
 )
 
 // Years CONT spend is spread across.
-export const CONT_YEARS: Year[] = [2027, 2028, 2029]
+export const CONT_YEARS: ContYear[] = [2027, 2028, 2029]
 
 export const ESCALATION_YEARS: Year[] = [2026, 2027, 2028, 2029]
+
+// Default per-item CONT allocation — an even-ish split that keeps the seeded
+// baseline tied to ~$403M. Sums to 100.
+export const DEFAULT_CONT_ALLOC: ContAllocation = { 2027: 33, 2028: 33, 2029: 34 }

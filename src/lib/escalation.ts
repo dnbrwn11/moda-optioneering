@@ -1,4 +1,4 @@
-import type { EscalationRates, Item, Year } from '../types'
+import type { ContAllocation, EscalationRates, Item, Year } from '../types'
 import { CONT_YEARS, PHASE_BY_ID } from './phases'
 
 // Compounding multiplier from base year 2025 to the end of `year`.
@@ -12,17 +12,23 @@ export function yearMultiplier(year: Year, rates: EscalationRates): number {
   return m
 }
 
-// CONT items: base split evenly across 2027/2028/2029, each third escalated
-// to its own year. Effective multiplier is the average of the three.
-export function contMultiplier(rates: EscalationRates): number {
-  const sum = CONT_YEARS.reduce((acc, y) => acc + yearMultiplier(y, rates), 0)
-  return sum / CONT_YEARS.length
+// CONT items: base spread across 2027/2028/2029 per the item's own allocation
+// (percents summing to 100). Each year's portion escalates to that year, so the
+// effective multiplier is the allocation-weighted average of the year mults.
+export function contMultiplier(
+  alloc: ContAllocation,
+  rates: EscalationRates,
+): number {
+  return CONT_YEARS.reduce(
+    (acc, y) => acc + (alloc[y] / 100) * yearMultiplier(y, rates),
+    0,
+  )
 }
 
 // Effective escalation multiplier for an item given its phase.
 export function itemMultiplier(item: Item, rates: EscalationRates): number {
   const def = PHASE_BY_ID[item.phase]
-  if (def.year === null) return contMultiplier(rates)
+  if (def.year === null) return contMultiplier(item.alloc, rates)
   return yearMultiplier(def.year, rates)
 }
 
@@ -56,10 +62,9 @@ export function computeTotals(items: Item[], rates: EscalationRates): Totals {
 
     const def = PHASE_BY_ID[item.phase]
     if (def.year === null) {
-      // CONT — one escalated third lands in each of 2027/28/29
-      const third = item.base / CONT_YEARS.length
+      // CONT — each year's allocated portion lands in that year, escalated.
       for (const y of CONT_YEARS) {
-        spendByYear[y] += third * yearMultiplier(y, rates)
+        spendByYear[y] += item.base * (item.alloc[y] / 100) * yearMultiplier(y, rates)
       }
     } else {
       spendByYear[def.year] += esc

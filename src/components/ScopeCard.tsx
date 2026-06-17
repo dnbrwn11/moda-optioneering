@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Item, ItemStatus, LevelId } from '../types'
 import { useStore } from '../store'
 import { escalatedCost } from '../lib/escalation'
+import { allocSum } from '../lib/alloc'
+import { CONT_YEARS } from '../lib/phases'
 import { fmtFull } from '../lib/format'
 
 // Level chips: gray scale + green only (no rainbow). OVERLAY/AGING — the
@@ -33,11 +35,79 @@ function statusPillClass(status: ItemStatus): string {
 
 const STATUS_CYCLE: ItemStatus[] = ['required', 'value-add', 'deferrable']
 
+// Per-year spend allocation editor (CONT items only). Three mini-sliders whose
+// percents always sum to 100 (enforced by rebalanceAlloc in the store). The
+// running total is shown and flags red if it ever drifts off 100.
+function AllocEditor({
+  item,
+  onInteractStart,
+}: {
+  item: Item
+  onInteractStart: () => void
+}) {
+  const setAlloc = useStore((s) => s.setAlloc)
+  const sum = allocSum(item.alloc)
+  const balanced = sum === 100
+
+  return (
+    <div className="mt-2 rounded border border-pcl-light bg-black/[0.02] p-2">
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-[10px] font-medium uppercase tracking-wider text-pcl-mid">
+          Spend allocation
+        </span>
+        <span
+          className={`text-[10px] font-bold tabular-nums ${
+            balanced ? 'text-pcl-green' : 'text-pcl-orange'
+          }`}
+        >
+          Σ {sum}%
+        </span>
+      </div>
+      {CONT_YEARS.map((y) => (
+        <div key={y} className="flex items-center gap-2 py-0.5">
+          <span className="w-9 shrink-0 text-[10px] font-medium tabular-nums text-pcl-dark">
+            {y}
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={item.alloc[y]}
+            onPointerDown={onInteractStart}
+            onChange={(e) => setAlloc(item.id, y, Number(e.target.value))}
+            aria-label={`${item.name} ${y} allocation`}
+            className="h-1 flex-1 cursor-pointer"
+          />
+          <span className="w-9 shrink-0 text-right text-[10px] font-bold tabular-nums text-pcl-dark">
+            {item.alloc[y]}%
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function ScopeCard({ item }: { item: Item }) {
   const rates = useStore((s) => s.rates)
   const toggleIncluded = useStore((s) => s.toggleIncluded)
   const setStatus = useStore((s) => s.setStatus)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  // Disable card drag while a slider is being manipulated, so dragging the
+  // thumb doesn't start a card drag. Re-enabled on any pointer release.
+  const [dragEnabled, setDragEnabled] = useState(true)
+
+  useEffect(() => {
+    const reenable = () => setDragEnabled(true)
+    window.addEventListener('pointerup', reenable)
+    window.addEventListener('dragend', reenable)
+    return () => {
+      window.removeEventListener('pointerup', reenable)
+      window.removeEventListener('dragend', reenable)
+    }
+  }, [])
+
+  const isCont = item.phase === 'CONT'
 
   const esc = escalatedCost(item, rates)
   const escalatedUp = item.included && esc > item.base + 0.5
@@ -59,7 +129,7 @@ export default function ScopeCard({ item }: { item: Item }) {
 
   return (
     <div
-      draggable
+      draggable={dragEnabled}
       onDragStart={(e) => {
         e.dataTransfer.setData('text/plain', item.id)
         e.dataTransfer.effectAllowed = 'move'
@@ -122,6 +192,11 @@ export default function ScopeCard({ item }: { item: Item }) {
           {STATUS_LABEL[item.status]}
         </button>
       </div>
+
+      {/* CONT items: per-year spend allocation (2027/2028/2029, sum = 100%) */}
+      {isCont && (
+        <AllocEditor item={item} onInteractStart={() => setDragEnabled(false)} />
+      )}
 
       {/* Required-defer confirm dialog */}
       {confirmOpen && (

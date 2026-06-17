@@ -7,6 +7,7 @@ import type {
   PhaseId,
   RawItem,
 } from '../types'
+import { DEFAULT_CONT_ALLOC } from './phases'
 
 // Flat 5%/yr default (the Big Kahuna basis).
 export const DEFAULT_RATES: EscalationRates = {
@@ -110,6 +111,8 @@ export function buildItems(data: LineItemData): Item[] {
         phase: seedPhase(level.id, raw.name),
         included: true,
         status: seedStatus(level.id, raw.name),
+        // Even-ish default split (used while phase === 'CONT').
+        alloc: { ...DEFAULT_CONT_ALLOC },
       })
     }
   }

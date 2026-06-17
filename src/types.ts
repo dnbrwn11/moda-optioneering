@@ -16,6 +16,11 @@ export type ItemStatus = 'required' | 'value-add' | 'deferrable'
 
 export type Year = 2026 | 2027 | 2028 | 2029
 
+// CONT items spread their base across these spend years via a per-item
+// allocation (integer percents that always sum to 100).
+export type ContYear = 2027 | 2028 | 2029
+export type ContAllocation = Record<ContYear, number>
+
 // Shape as authored in src/data/lineitems.json.
 export interface RawItem {
   id: string
@@ -57,13 +62,10 @@ export interface Item {
   phase: PhaseId
   included: boolean
   status: ItemStatus
+  // Per-year spend allocation — only meaningful while phase === 'CONT'.
+  // Integer percents (2027/2028/2029) that always sum to 100.
+  alloc: ContAllocation
 }
 
 // Per-year escalation rates (fractional, e.g. 0.05 = 5%).
 export type EscalationRates = Record<Year, number>
-
-export type ScenarioId =
-  | 'baseline'
-  | 'capacity-protect'
-  | 'affordability'
-  | 'premium-accelerate'

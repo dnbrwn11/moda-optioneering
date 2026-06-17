@@ -1,8 +1,4 @@
-import ScenarioButtons from './ScenarioButtons'
-
-// Clean header band with a labeled placeholder for the PCL logo (asset added
-// later) top-left, the project title, and the scenario presets top-right.
-// PCL Green band, calm.
+// Clean header band: PCL logo (top-left) + project title. PCL Green band, calm.
 
 export default function Header() {
   return (
@@ -21,10 +17,6 @@ export default function Header() {
         <p className="truncate text-xs font-light text-white/80">
           CM/GC Interview Demo · Live cost &amp; phase modeling · Confidential
         </p>
-      </div>
-
-      <div className="ml-auto">
-        <ScenarioButtons />
       </div>
     </header>
   )
