@@ -9,8 +9,6 @@ interface Row {
   key: string
   label: string
   value: number
-  // Continuous line gets a lighter, dashed treatment — it isn't a window.
-  continuous?: boolean
 }
 
 // A single horizontal bar: gray label · PCL-green bar · value.
@@ -23,9 +21,7 @@ function BarRow({ row, max }: { row: Row; max: number }) {
       </span>
       <div className="relative h-5 flex-1 rounded bg-[#f0f0ef]">
         <div
-          className={`h-full rounded bg-pcl-green transition-[width] duration-300 ${
-            row.continuous ? 'opacity-70' : ''
-          }`}
+          className="h-full rounded bg-pcl-green transition-[width] duration-300"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -41,19 +37,12 @@ export default function SummaryPanel() {
   const [view, setView] = useState<View>('phase')
 
   // --- Build rows for each view -------------------------------------------
-  const phaseRows: Row[] = [
-    ...TIME_PHASES.map((p) => ({
-      key: p.id,
-      label: p.name,
-      value: totals.phaseSubtotals[p.id],
-    })),
-    {
-      key: 'CONT',
-      label: 'Continuous / Systems Work',
-      value: totals.continuousTotal,
-      continuous: true,
-    },
-  ]
+  // By Phase: discrete subtotal + straight-line continuous spend folded in.
+  const phaseRows: Row[] = TIME_PHASES.map((p) => ({
+    key: p.id,
+    label: p.name,
+    value: totals.phaseWithContinuous[p.id],
+  }))
 
   const yearRows: Row[] = ([2027, 2028, 2029] as const).map((y) => ({
     key: String(y),
@@ -79,7 +68,7 @@ export default function SummaryPanel() {
     )
     console.log(`Headline Total Escalated Cost: ${M(headline)}`)
     console.log(
-      `%cBy Phase: 6 windows + continuous = ${M(phaseSum)}  ${
+      `%cBy Phase: 6 windows (continuous folded in straight-line) = ${M(phaseSum)}  ${
         ok(phaseSum) ? '✓ reconciles' : '✗ MISMATCH'
       }`,
       `color:${ok(phaseSum) ? '#005D2F' : '#D83C31'};font-weight:700`,
@@ -128,7 +117,9 @@ export default function SummaryPanel() {
       <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-pcl-light pt-2">
         <p className="text-[11px] font-light text-pcl-mid">
           {view === 'phase'
-            ? 'Continuous / systems work spans all phases, so a window can read low or zero discrete scope while systems spend still accrues — it stays on its own line rather than being split into windows we can’t resolve.'
+            ? `Each bar = discrete scope + continuous / systems work (total ${fmtMillions(
+                totals.continuousTotal,
+              )}) distributed straight-line by time, so 8-month during-season windows absorb twice the continuous spend of 4-month offseason windows.`
             : 'Each year combines escalated discrete scope mapped to that year plus every continuous item’s per-year allocated, escalated portion.'}
         </p>
         <p className="shrink-0 text-[11px] font-medium tabular-nums text-pcl-dark">

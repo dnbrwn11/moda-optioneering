@@ -1,11 +1,28 @@
 import type {
   ContAllocation,
+  ContYear,
   EscalationRates,
   Item,
   PhaseId,
   Year,
 } from '../types'
 import { CONT_YEARS, PHASE_BY_ID } from './phases'
+
+// Straight-line (per-month) distribution of continuous spend into windows.
+// Within a calendar year the offseason window is Jun 1–Sep 30 (4 months); the
+// during-season window is Oct 1–May 31, which inside a single calendar year
+// captures Jan–May + Oct–Dec (8 months). Together they cover all 12 months, so
+// a year's continuous amount splits 4/12 to its OS window and 8/12 to its DS
+// window — the 8-month DS window absorbs twice the OS window. Each CONT year
+// maps to its same-numbered OS/DS pair (matches the year labels in phases.ts).
+const OFFSEASON_MONTHS = 4
+const DURING_SEASON_MONTHS = 8
+const MONTHS_PER_YEAR = 12
+const CONT_YEAR_WINDOWS: Record<ContYear, { os: PhaseId; ds: PhaseId }> = {
+  2027: { os: '1OS', ds: '1DS' },
+  2028: { os: '2OS', ds: '2DS' },
+  2029: { os: '3OS', ds: '3DS' },
+}
 
 // Compounding multiplier from base year 2025 to the end of `year`.
 //   multiplier(Y) = product of (1 + rate_y) for y in 2026..Y
@@ -55,6 +72,9 @@ export interface Totals {
   phaseSubtotals: Record<PhaseId, number>
   // total escalated cost of all continuous (CONT) items — spread across phases
   continuousTotal: number
+  // discrete subtotal + straight-line continuous spend folded into each of the
+  // 6 time windows (CONT key unused). The 6 entries sum to escalatedTotal.
+  phaseWithContinuous: Record<PhaseId, number>
 }
 
 export function computeTotals(items: Item[], rates: EscalationRates): Totals {
@@ -64,6 +84,15 @@ export function computeTotals(items: Item[], rates: EscalationRates): Totals {
   let continuousTotal = 0
   const spendByYear: Record<Year, number> = { 2026: 0, 2027: 0, 2028: 0, 2029: 0 }
   const phaseSubtotals: Record<PhaseId, number> = {
+    '1OS': 0,
+    '1DS': 0,
+    '2OS': 0,
+    '2DS': 0,
+    '3OS': 0,
+    '3DS': 0,
+    CONT: 0,
+  }
+  const phaseWithContinuous: Record<PhaseId, number> = {
     '1OS': 0,
     '1DS': 0,
     '2OS': 0,
@@ -83,13 +112,19 @@ export function computeTotals(items: Item[], rates: EscalationRates): Totals {
 
     const def = PHASE_BY_ID[item.phase]
     if (def.year === null) {
-      // CONT — each year's allocated portion lands in that year, escalated.
+      // CONT — each year's allocated portion lands in that year, escalated,
+      // then spreads straight-line into that year's OS (4mo) / DS (8mo) windows.
       continuousTotal += esc
       for (const y of CONT_YEARS) {
-        spendByYear[y] += item.base * (item.alloc[y] / 100) * yearMultiplier(y, rates)
+        const yearAmt = item.base * (item.alloc[y] / 100) * yearMultiplier(y, rates)
+        spendByYear[y] += yearAmt
+        const w = CONT_YEAR_WINDOWS[y]
+        phaseWithContinuous[w.os] += (yearAmt * OFFSEASON_MONTHS) / MONTHS_PER_YEAR
+        phaseWithContinuous[w.ds] += (yearAmt * DURING_SEASON_MONTHS) / MONTHS_PER_YEAR
       }
     } else {
       spendByYear[def.year] += esc
+      phaseWithContinuous[item.phase] += esc
     }
   }
 
@@ -101,5 +136,6 @@ export function computeTotals(items: Item[], rates: EscalationRates): Totals {
     spendByYear,
     phaseSubtotals,
     continuousTotal,
+    phaseWithContinuous,
   }
 }
