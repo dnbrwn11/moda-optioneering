@@ -1,0 +1,54 @@
+/* Self-hosted Barlow — woff2 files bundled in src/fonts/.
+   No Google Fonts CDN; the app renders fully offline. */
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./fonts/barlow-300.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/barlow-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./fonts/barlow-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/barlow-700.woff2') format('woff2');
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Barlow', system-ui, sans-serif;
+  font-weight: 300;
+  background-color: #f4f4f3;
+  color: #36383d;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Calm, restrained slider styling (PCL green track fill via accent-color). */
+input[type='range'] {
+  accent-color: #005d2f;
+}
