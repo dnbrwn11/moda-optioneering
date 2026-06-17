@@ -46,7 +46,7 @@ export default function PhaseColumn({ phase, items }: Props) {
       }}
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
-      className={`flex w-64 shrink-0 flex-col rounded-lg border bg-[#f7f7f6] transition-colors ${
+      className={`flex min-w-[170px] flex-1 flex-col rounded-lg border bg-[#f7f7f6] transition-colors ${
         load.overloaded
           ? 'border-pcl-orange'
           : dragOver
@@ -88,7 +88,7 @@ export default function PhaseColumn({ phase, items }: Props) {
       </div>
 
       {/* Cards */}
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
+      <div className="flex max-h-[58vh] flex-col gap-2 overflow-y-auto p-2">
         {items.length === 0 ? (
           <p className="px-1 py-4 text-center text-[11px] font-light text-pcl-mid">
             Drop scope here

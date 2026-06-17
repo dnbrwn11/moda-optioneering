@@ -20,6 +20,10 @@ export const PHASES: PhaseDef[] = [
   { id: 'CONT', name: 'Continuous', short: 'CONT', year: null, kind: 'continuous' },
 ]
 
+// The six time-window phases (the draggable board). CONT is handled separately
+// in its own full-width section.
+export const TIME_PHASES: PhaseDef[] = PHASES.filter((p) => p.id !== 'CONT')
+
 export const PHASE_BY_ID: Record<PhaseId, PhaseDef> = PHASES.reduce(
   (acc, p) => {
     acc[p.id] = p
