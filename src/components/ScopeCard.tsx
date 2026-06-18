@@ -134,17 +134,35 @@ export default function ScopeCard({ item }: { item: Item }) {
         e.dataTransfer.setData('text/plain', item.id)
         e.dataTransfer.effectAllowed = 'move'
       }}
-      className={`group relative cursor-grab rounded-md border bg-white p-2.5 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing ${
+      className={`group relative cursor-grab rounded-md border bg-white p-2.5 shadow-sm transition-all hover:-translate-y-px hover:shadow-md active:cursor-grabbing ${
         item.included ? 'border-pcl-light' : 'border-dashed border-pcl-mid opacity-60'
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <span
-          className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-medium ${levelChipClass(
-            item.level,
-          )}`}
-        >
-          {item.level}
+        <span className="flex items-center gap-1.5">
+          {/* Drag affordance — 6-dot grip. Muted gray at rest, PCL green on
+              card hover. Whole card is the drag activator (native HTML5 DnD);
+              this is a visual cue only. */}
+          <svg
+            viewBox="0 0 8 12"
+            aria-hidden
+            className="h-3 w-2 shrink-0 text-[#9aa6a0] transition-colors group-hover:text-pcl-green"
+            fill="currentColor"
+          >
+            <circle cx="2" cy="2" r="1" />
+            <circle cx="6" cy="2" r="1" />
+            <circle cx="2" cy="6" r="1" />
+            <circle cx="6" cy="6" r="1" />
+            <circle cx="2" cy="10" r="1" />
+            <circle cx="6" cy="10" r="1" />
+          </svg>
+          <span
+            className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-medium ${levelChipClass(
+              item.level,
+            )}`}
+          >
+            {item.level}
+          </span>
         </span>
         {/* Include toggle */}
         <label className="flex shrink-0 cursor-pointer items-center gap-1 text-[10px] font-medium text-pcl-mid">

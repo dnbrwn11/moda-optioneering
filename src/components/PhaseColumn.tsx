@@ -90,9 +90,9 @@ export default function PhaseColumn({ phase, items }: Props) {
       {/* Cards */}
       <div className="flex max-h-[58vh] flex-col gap-2 overflow-y-auto p-2">
         {items.length === 0 ? (
-          <p className="px-1 py-4 text-center text-[11px] font-light text-pcl-mid">
+          <div className="flex items-center justify-center rounded-md border-[1.5px] border-dashed border-[#cfe3d6] px-3 py-6 text-center text-[11px] font-light text-pcl-mid">
             Drop scope here
-          </p>
+          </div>
         ) : (
           items.map((it) => <ScopeCard key={it.id} item={it} />)
         )}
