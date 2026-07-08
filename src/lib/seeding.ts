@@ -39,7 +39,7 @@ function seedStatus(level: LevelId, name: string): ItemStatus {
 }
 
 // Default phase seeding from Image 1 (section 9). Rules applied in order;
-// first match wins. Validated to land the escalated grand total at ~$403.2M
+// first match wins. Validated to land the escalated grand total at ~$403.8M
 // under flat 5%/yr with all items included.
 function seedPhase(level: LevelId, name: string): PhaseId {
   const n = name.toLowerCase()
@@ -108,6 +108,7 @@ export function buildItems(data: LineItemData): Item[] {
         unit: raw.unit,
         base: raw.base,
         derived: Boolean(raw.derived),
+        trade: raw.trade,
         phase: seedPhase(level.id, raw.name),
         included: true,
         status: seedStatus(level.id, raw.name),

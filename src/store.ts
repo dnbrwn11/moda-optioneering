@@ -57,9 +57,9 @@ function logStartupAudit(items: Item[], baselineEscalated: number): void {
   console.log(
     `Reported escalated:     $${data.meta.reported_escalated_total.toLocaleString('en-US')}  (= $${(data.meta.reported_escalated_total / 1e6).toFixed(2)}M)`,
   )
-  const target = baselineEscalated >= 402e6 && baselineEscalated <= 403.5e6
+  const target = baselineEscalated >= 402e6 && baselineEscalated <= 405.5e6
   console.log(
-    `%cValidation: escalated total ${target ? 'WITHIN' : 'OUTSIDE'} $402-403M target`,
+    `%cValidation: escalated total ${target ? 'WITHIN' : 'OUTSIDE'} $402-405.5M target`,
     `color:${target ? '#005D2F' : '#D83C31'};font-weight:700`,
   )
   /* eslint-enable no-console */

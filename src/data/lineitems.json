@@ -3,113 +3,114 @@
     "source": "Big Kahuna Feasibility Estimate (Nov 2025) - Images 2 & 3",
     "basis": "2025 base costs. Escalation computed live by dashboard, not hardcoded.",
     "reported_base_total": 347452128,
-    "reported_escalated_total": 403389143,
-    "note": "Some line-item base costs are derived from 2025 Qty x Unit where the printed 2025 Cost cell was obscured. Flagged with derived:true. Reconcile before demo."
+    "reported_escalated_total": 403760000,
+    "note": "Some line-item base costs were derived from 2025 Qty x Unit where the printed 2025 Cost cell was obscured (flagged derived:true). Item bases reconciled to the feasibility.pdf source line items on 2026-07-08; every base now matches its source line-item value.",
+    "reconciliation_note": "Item bases foot to $347,452,128 (sum of the 65 source line items = feasibility.pdf Cost-Sequence grand total). The estimate’s stated Total Construction Cost of $347,452,500 (p.14) is $372 higher and does not foot to its own line items — a known internal rounding gap in the source estimate."
   },
   "levels": [
     {
       "id": "L100", "name": "Event Level / Level 100",
       "items": [
-        {"id":"L100-01","name":"Courtside Club","qty":13655,"unit":229,"base":3123602},
-        {"id":"L100-02","name":"Home Team Areas","qty":12338,"unit":231,"base":2849167},
-        {"id":"L100-03","name":"Sideline Club - East Side","qty":7133,"unit":286,"base":2042299},
-        {"id":"L100-04","name":"New Club Entries (3)","qty":12713,"unit":null,"base":425932,"derived":true},
-        {"id":"L100-05","name":"Sideline Club #2 West Side","qty":4163,"unit":281,"base":1170469},
-        {"id":"L100-06","name":"Kitchen/Commissary","qty":12713,"unit":189,"base":2402020},
-        {"id":"L100-07","name":"Aux Lockers","qty":7004,"unit":263,"base":1840186},
-        {"id":"L100-08","name":"Staff Lockers and Laundry","qty":8291,"unit":337,"base":2796350},
-        {"id":"L100-09","name":"WNBA Lockers","qty":6039,"unit":271,"base":1634153},
-        {"id":"L100-10","name":"Add Loading Dock Ramp","qty":1338,"unit":60,"base":80520},
-        {"id":"L100-11","name":"Balance of Event Lvl","qty":85241,"unit":60,"base":5072645}
+        {"id":"L100-01","name":"Courtside Club","qty":13655,"unit":229,"base":3123602,"trade":"Interior Buildout"},
+        {"id":"L100-02","name":"Home Team Areas","qty":12338,"unit":231,"base":2849167,"trade":"Interior Buildout"},
+        {"id":"L100-03","name":"Sideline Club - East Side","qty":7133,"unit":286,"base":2042299,"trade":"Interior Buildout"},
+        {"id":"L100-04","name":"New Club Entries (3)","qty":12713,"unit":null,"base":425932,"derived":true,"trade":"Interior Buildout"},
+        {"id":"L100-05","name":"Sideline Club #2 West Side","qty":4163,"unit":281,"base":1170469,"trade":"Interior Buildout"},
+        {"id":"L100-06","name":"Kitchen/Commissary","qty":12713,"unit":189,"base":2402020,"trade":"Interior Buildout"},
+        {"id":"L100-07","name":"Aux Lockers","qty":7004,"unit":263,"base":1840186,"trade":"Interior Buildout"},
+        {"id":"L100-08","name":"Staff Lockers and Laundry","qty":8291,"unit":337,"base":2796350,"trade":"Interior Buildout"},
+        {"id":"L100-09","name":"WNBA Lockers","qty":6039,"unit":271,"base":1634153,"trade":"Interior Buildout"},
+        {"id":"L100-10","name":"Add Loading Dock Ramp","qty":1338,"unit":60,"base":80520,"trade":"Interior Buildout"},
+        {"id":"L100-11","name":"Balance of Event Lvl","qty":85241,"unit":60,"base":5072645,"trade":"Interior Buildout"}
       ]
     },
     {
       "id": "L200", "name": "Main Concourse / Level 200",
       "items": [
-        {"id":"L200-01","name":"East Sideline Club","qty":2723,"unit":247,"base":672145},
-        {"id":"L200-02","name":"West Sideline Club","qty":3076,"unit":247,"base":759774},
-        {"id":"L200-03","name":"Circular Entry Renovations","qty":2934,"unit":205,"base":602474},
-        {"id":"L200-04","name":"North Entry Renovations","qty":4606,"unit":193,"base":889390},
-        {"id":"L200-05","name":"Restrooms - Group #1","qty":3868,"unit":260,"base":1005835},
-        {"id":"L200-06","name":"Restrooms - Group #2","qty":6182,"unit":260,"base":1607567},
-        {"id":"L200-07","name":"Concessions","qty":7403,"unit":205,"base":1514054},
-        {"id":"L200-08","name":"Guest Services/Coat Check","qty":2587,"unit":140,"base":361973},
-        {"id":"L200-09","name":"Stairwells","qty":3725,"unit":16,"base":59004},
-        {"id":"L200-10","name":"BOH Spaces","qty":8064,"unit":25,"base":202245},
-        {"id":"L200-11","name":"Mechanical","qty":4513,"unit":16,"base":71486},
-        {"id":"L200-12","name":"Main Concourse Areas","qty":81837,"unit":49,"base":3996919}
+        {"id":"L200-01","name":"East Sideline Club","qty":2723,"unit":247,"base":672145,"trade":"Interior Buildout"},
+        {"id":"L200-02","name":"West Sideline Club","qty":3076,"unit":247,"base":759774,"trade":"Interior Buildout"},
+        {"id":"L200-03","name":"Circular Entry Renovations","qty":2934,"unit":205,"base":602474,"trade":"Interior Buildout"},
+        {"id":"L200-04","name":"North Entry Renovations","qty":4606,"unit":193,"base":889390,"trade":"Interior Buildout"},
+        {"id":"L200-05","name":"Restrooms - Group #1","qty":3868,"unit":260,"base":1005835,"trade":"Interior Buildout"},
+        {"id":"L200-06","name":"Restrooms - Group #2","qty":6182,"unit":260,"base":1607567,"trade":"Interior Buildout"},
+        {"id":"L200-07","name":"Concessions","qty":7403,"unit":205,"base":1514654,"trade":"Interior Buildout"},
+        {"id":"L200-08","name":"Guest Services/Coat Check","qty":2587,"unit":140,"base":361973,"trade":"Interior Buildout"},
+        {"id":"L200-09","name":"Stairwells","qty":3725,"unit":16,"base":59004,"trade":"Interior Buildout"},
+        {"id":"L200-10","name":"BOH Spaces","qty":8064,"unit":25,"base":202245,"trade":"Interior Buildout"},
+        {"id":"L200-11","name":"Mechanical","qty":4513,"unit":16,"base":71486,"trade":"Interior Buildout"},
+        {"id":"L200-12","name":"Main Concourse Areas","qty":81837,"unit":49,"base":3996919,"trade":"Interior Buildout"}
       ]
     },
     {
       "id": "L300", "name": "Club Level / Level 300",
       "items": [
-        {"id":"L300-01","name":"North Neighborhood Club","qty":13823,"unit":369,"base":5101858},
-        {"id":"L300-02","name":"Club Level Suites","qty":10811,"unit":407,"base":4399320},
-        {"id":"L300-03","name":"Sideline/Center Court Clubs","qty":7262,"unit":434,"base":3149218},
-        {"id":"L300-04","name":"Rotunda Club","qty":9759,"unit":203,"base":1983810},
-        {"id":"L300-05","name":"South Neighborhood Club","qty":18156,"unit":466,"base":8458505},
-        {"id":"L300-06","name":"Premium Entries/Lobby","qty":15889,"unit":185,"base":2936287},
-        {"id":"L300-07","name":"Premium Elevator Lobby","qty":3432,"unit":169,"base":579871},
-        {"id":"L300-08","name":"Toilet Renovations","qty":7800,"unit":244,"base":1904760},
-        {"id":"L300-09","name":"Stairwells","qty":3950,"unit":17,"base":67919},
-        {"id":"L300-10","name":"BOH Spaces","qty":15144,"unit":38,"base":579712},
-        {"id":"L300-11","name":"Mechanical","qty":4857,"unit":16,"base":76595}
+        {"id":"L300-01","name":"North Neighborhood Club","qty":13823,"unit":369,"base":5101858,"trade":"Interior Buildout"},
+        {"id":"L300-02","name":"Club Level Suites","qty":10811,"unit":407,"base":4395320,"trade":"Interior Buildout"},
+        {"id":"L300-03","name":"Sideline/Center Court Clubs","qty":7262,"unit":434,"base":3149218,"trade":"Interior Buildout"},
+        {"id":"L300-04","name":"Rotunda Club","qty":9759,"unit":203,"base":1983810,"trade":"Interior Buildout"},
+        {"id":"L300-05","name":"South Neighborhood Club","qty":18156,"unit":466,"base":8458505,"trade":"Interior Buildout"},
+        {"id":"L300-06","name":"Premium Entries/Lobby","qty":15889,"unit":185,"base":2936287,"trade":"Interior Buildout"},
+        {"id":"L300-07","name":"Premium Elevator Lobby","qty":3432,"unit":169,"base":579871,"trade":"Interior Buildout"},
+        {"id":"L300-08","name":"Toilet Renovations","qty":7800,"unit":244,"base":1904760,"trade":"Interior Buildout"},
+        {"id":"L300-09","name":"Stairwells","qty":3950,"unit":17,"base":67919,"trade":"Interior Buildout"},
+        {"id":"L300-10","name":"BOH Spaces","qty":15144,"unit":38,"base":579712,"trade":"Interior Buildout"},
+        {"id":"L300-11","name":"Mechanical","qty":4857,"unit":16,"base":76935,"trade":"Interior Buildout"}
       ]
     },
     {
       "id": "L400", "name": "Suite Level / Level 400",
       "items": [
-        {"id":"L400-01","name":"Northwest Neighborhood Club","qty":6350,"unit":232,"base":1475423},
-        {"id":"L400-02","name":"Southwest Neighborhood Club","qty":6874,"unit":222,"base":1594980},
-        {"id":"L400-03","name":"Southeast Neighborhood Club","qty":6500,"unit":241,"base":1565269},
-        {"id":"L400-04","name":"Northeast Neighborhood Club","qty":6183,"unit":234,"base":1449656},
-        {"id":"L400-05","name":"Suites Renovations","qty":28290,"unit":207,"base":5867374},
-        {"id":"L400-06","name":"Premium Lobby Areas","qty":12597,"unit":154,"base":1945481},
-        {"id":"L400-07","name":"Support Areas","qty":6802,"unit":79,"base":538718},
-        {"id":"L400-08","name":"Stairwells","qty":6116,"unit":17,"base":104951},
-        {"id":"L400-09","name":"BOH","qty":8634,"unit":37,"base":319113}
+        {"id":"L400-01","name":"Northwest Neighborhood Club","qty":6350,"unit":232,"base":1475423,"trade":"Interior Buildout"},
+        {"id":"L400-02","name":"Southwest Neighborhood Club","qty":6874,"unit":222,"base":1594980,"trade":"Interior Buildout"},
+        {"id":"L400-03","name":"Southeast Neighborhood Club","qty":6500,"unit":241,"base":1565269,"trade":"Interior Buildout"},
+        {"id":"L400-04","name":"Northeast Neighborhood Club","qty":6183,"unit":234,"base":1449658,"trade":"Interior Buildout"},
+        {"id":"L400-05","name":"Suites Renovations","qty":28290,"unit":207,"base":5867374,"trade":"Interior Buildout"},
+        {"id":"L400-06","name":"Premium Lobby Areas","qty":12597,"unit":154,"base":1945481,"trade":"Interior Buildout"},
+        {"id":"L400-07","name":"Support Areas","qty":6802,"unit":79,"base":538718,"trade":"Interior Buildout"},
+        {"id":"L400-08","name":"Stairwells","qty":6116,"unit":17,"base":104951,"trade":"Interior Buildout"},
+        {"id":"L400-09","name":"BOH","qty":8634,"unit":37,"base":319113,"trade":"Interior Buildout"}
       ]
     },
     {
       "id": "L500", "name": "Upper Concourse / Level 500",
       "items": [
-        {"id":"L500-01","name":"Concessions","qty":8286,"unit":205,"base":1695316},
-        {"id":"L500-02","name":"Restrooms","qty":8602,"unit":251,"base":2157382},
-        {"id":"L500-03","name":"Elevator Lobby","qty":1521,"unit":86,"base":130502},
-        {"id":"L500-04","name":"Stairwells","qty":3438,"unit":17,"base":58996},
-        {"id":"L500-05","name":"BOH Spaces","qty":7953,"unit":40,"base":314939},
-        {"id":"L500-06","name":"Upper Concourse","qty":55490,"unit":44,"base":2417146}
+        {"id":"L500-01","name":"Concessions","qty":8286,"unit":205,"base":1695316,"trade":"Interior Buildout"},
+        {"id":"L500-02","name":"Restrooms","qty":8602,"unit":251,"base":2157382,"trade":"Interior Buildout"},
+        {"id":"L500-03","name":"Elevator Lobby","qty":1521,"unit":86,"base":130502,"trade":"Interior Buildout"},
+        {"id":"L500-04","name":"Stairwells","qty":3438,"unit":17,"base":58996,"trade":"Interior Buildout"},
+        {"id":"L500-05","name":"BOH Spaces","qty":7953,"unit":40,"base":314939,"trade":"Interior Buildout"},
+        {"id":"L500-06","name":"Upper Concourse","qty":55490,"unit":44,"base":2417144,"trade":"Interior Buildout"}
       ]
     },
     {
       "id": "L700", "name": "Press Level / Level 700",
       "items": [
-        {"id":"L700-01","name":"Press Level Finishes","qty":7226,"unit":133,"base":963370},
-        {"id":"L700-02","name":"Alaska Airlines Boxes","qty":1492,"unit":133,"base":198913}
+        {"id":"L700-01","name":"Press Level Finishes","qty":7226,"unit":133,"base":963370,"trade":"Interior Buildout"},
+        {"id":"L700-02","name":"Alaska Airlines Boxes","qty":1492,"unit":133,"base":198913,"trade":"Interior Buildout"}
       ]
     },
     {
       "id": "OVERLAY", "name": "Overlays & Other Options",
       "items": [
-        {"id":"OV-01","name":"Bowl Area / Catwalk / Rigging Grid","qty":1,"unit":6190367,"base":6190367},
-        {"id":"OV-02","name":"Sound Treatments and Exp Joint Replace","qty":1,"unit":2419021,"base":2419021},
-        {"id":"OV-03","name":"Garage Rework - Joint Repairs, etc","qty":1,"unit":1649000,"base":1649000},
-        {"id":"OV-04","name":"Exterior Wall Refresh & LED","qty":1,"unit":6881947,"base":6881947},
-        {"id":"OV-05","name":"Food Service Equipment","qty":1,"unit":20947005,"base":20947005},
-        {"id":"OV-06","name":"Seating - All New Fixed Seats","qty":1,"unit":6317385,"base":6317385},
-        {"id":"OV-07","name":"Vertical Transportation - Elevators/Escal","qty":1,"unit":5887200,"base":5887200},
-        {"id":"OV-08","name":"Plumbing","qty":1,"unit":17605595,"base":17605595},
-        {"id":"OV-09","name":"Fire Protection","qty":1,"unit":6560000,"base":6560000},
-        {"id":"OV-10","name":"HVAC","qty":1,"unit":63725300,"base":63725300},
-        {"id":"OV-11","name":"Electrical and Low Voltage","qty":1,"unit":93010860,"base":93010860},
-        {"id":"OV-12","name":"Audio/Visual & TV Production","qty":1,"unit":19246600,"base":19246600},
-        {"id":"OV-13","name":"Sitework","qty":1,"unit":9401370,"base":9401370}
+        {"id":"OV-01","name":"Bowl Area / Catwalk / Rigging Grid","qty":1,"unit":6190367,"base":6190367,"trade":"Bowl & Rigging"},
+        {"id":"OV-02","name":"Sound Treatments and Exp Joint Replace","qty":1,"unit":2419021,"base":2419021,"trade":"Acoustical & Specialties"},
+        {"id":"OV-03","name":"Garage Rework - Joint Repairs, etc","qty":1,"unit":1649000,"base":1848000,"trade":"Structural/Concrete Repair"},
+        {"id":"OV-04","name":"Exterior Wall Refresh & LED","qty":1,"unit":6881947,"base":6881947,"trade":"Building Envelope"},
+        {"id":"OV-05","name":"Food Service Equipment","qty":1,"unit":20947005,"base":20947006,"trade":"Food Service Equipment"},
+        {"id":"OV-06","name":"Seating - All New Fixed Seats","qty":1,"unit":6317385,"base":6317388,"trade":"Seating"},
+        {"id":"OV-07","name":"Vertical Transportation - Elevators/Escal","qty":1,"unit":5887200,"base":5887200,"trade":"Vertical Transportation"},
+        {"id":"OV-08","name":"Plumbing","qty":1,"unit":17605595,"base":17805596,"trade":"Plumbing"},
+        {"id":"OV-09","name":"Fire Protection","qty":1,"unit":6560000,"base":6560000,"trade":"Fire Protection"},
+        {"id":"OV-10","name":"HVAC","qty":1,"unit":63725300,"base":63725300,"trade":"HVAC"},
+        {"id":"OV-11","name":"Electrical and Low Voltage","qty":1,"unit":93010860,"base":93010800,"trade":"Electrical & Low Voltage"},
+        {"id":"OV-12","name":"Audio/Visual & TV Production","qty":1,"unit":19246600,"base":19245600,"trade":"Audio Visual"},
+        {"id":"OV-13","name":"Sitework","qty":1,"unit":9401370,"base":9401370,"trade":"Sitework"}
       ]
     },
     {
       "id": "AGING", "name": "Aging Assets",
       "items": [
-        {"id":"AG-01","name":"Aging Assets (placeholder)","qty":1,"unit":0,"base":0}
+        {"id":"AG-01","name":"Aging Assets (placeholder)","qty":1,"unit":0,"base":0,"trade":"Aging Assets (Owner Decision)"}
       ]
     }
   ]

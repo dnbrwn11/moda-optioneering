@@ -15,9 +15,20 @@ import { CONT_YEARS, PHASE_BY_ID } from './phases'
 // a year's continuous amount splits 4/12 to its OS window and 8/12 to its DS
 // window — the 8-month DS window absorbs twice the OS window. Each CONT year
 // maps to its same-numbered OS/DS pair (matches the year labels in phases.ts).
-const OFFSEASON_MONTHS = 4
-const DURING_SEASON_MONTHS = 8
+// Exported so downstream parametric views (Resources crew-hour windows) size
+// their month spans from the same source as the CONT straight-line split.
+export const OFFSEASON_MONTHS = 4
+export const DURING_SEASON_MONTHS = 8
 const MONTHS_PER_YEAR = 12
+
+// Season window month boundaries (calendar month, 1 = Jan … 12 = Dec), lifted
+// out of the distribution comment above so downstream views (the analytics
+// cash-flow S-curve) get month-accurate band edges. Offseason runs Jun 1 – Sep
+// 30; during-season runs Oct 1 – May 31, wrapping into the following year.
+export const SEASON_WINDOWS = {
+  offseason: { startMonth: 6, endMonth: 9 }, // Jun 1 – Sep 30 (4 months)
+  duringSeason: { startMonth: 10, endMonth: 5 }, // Oct 1 – May 31 (8 months)
+} as const
 const CONT_YEAR_WINDOWS: Record<ContYear, { os: PhaseId; ds: PhaseId }> = {
   2027: { os: '1OS', ds: '1DS' },
   2028: { os: '2OS', ds: '2DS' },

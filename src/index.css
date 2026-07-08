@@ -52,3 +52,47 @@ body {
 input[type='range'] {
   accent-color: #005d2f;
 }
+
+/* ---------------------------------------------------------------------------
+   Print / Export PDF. The interactive app is hidden (.screen-app → display:none)
+   and a dedicated screen-hidden report (.print-report) is revealed. Pure print
+   CSS + window.print(); no runtime layout is affected on screen.
+   --------------------------------------------------------------------------- */
+@media print {
+  html,
+  body,
+  #root {
+    height: auto !important;
+    background: #fff !important;
+  }
+  body {
+    color: #000 !important;
+  }
+  @page {
+    margin: 14mm 12mm 20mm;
+  }
+  .screen-app {
+    display: none !important;
+  }
+  .print-report {
+    display: block !important;
+    /* Keep PCL green accents + bar fills through the print pipeline. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Confidential marking repeats on every printed page. */
+  .print-footer {
+    position: fixed;
+    bottom: 6mm;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 500;
+    color: #555;
+  }
+  /* Keep a phase section (and each row) together where it fits on a page. */
+  .avoid-break {
+    break-inside: avoid;
+  }
+}

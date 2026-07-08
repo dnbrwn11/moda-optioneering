@@ -12,6 +12,26 @@ export type LevelId =
 
 export type PhaseId = '1OS' | '1DS' | '2OS' | '2DS' | '3OS' | '3DS' | 'CONT'
 
+// Native trade/division from the source feasibility estimate. Discrete L100–L700
+// scopes are composite fit-out ("Interior Buildout"); CONT/OVERLAY items map 1:1
+// to their source divisions. A closed union so a typo is a compile error.
+export type Trade =
+  | 'Interior Buildout'
+  | 'Bowl & Rigging'
+  | 'Acoustical & Specialties'
+  | 'Structural/Concrete Repair'
+  | 'Building Envelope'
+  | 'Food Service Equipment'
+  | 'Seating'
+  | 'Vertical Transportation'
+  | 'Plumbing'
+  | 'Fire Protection'
+  | 'HVAC'
+  | 'Electrical & Low Voltage'
+  | 'Audio Visual'
+  | 'Sitework'
+  | 'Aging Assets (Owner Decision)'
+
 export type ItemStatus = 'required' | 'value-add' | 'deferrable'
 
 export type Year = 2026 | 2027 | 2028 | 2029
@@ -29,6 +49,7 @@ export interface RawItem {
   unit: number | null
   base: number
   derived?: boolean
+  trade: Trade
 }
 
 export interface RawLevel {
@@ -58,6 +79,7 @@ export interface Item {
   unit: number | null
   base: number
   derived: boolean
+  trade: Trade
   // runtime state
   phase: PhaseId
   included: boolean

@@ -38,5 +38,5 @@ export const CONT_YEARS: ContYear[] = [2027, 2028, 2029]
 export const ESCALATION_YEARS: Year[] = [2026, 2027, 2028, 2029]
 
 // Default per-item CONT allocation — an even-ish split that keeps the seeded
-// baseline tied to ~$403M. Sums to 100.
+// baseline tied to ~$403.8M. Sums to 100.
 export const DEFAULT_CONT_ALLOC: ContAllocation = { 2027: 33, 2028: 33, 2029: 34 }

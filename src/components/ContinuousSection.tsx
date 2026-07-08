@@ -2,22 +2,40 @@ import { useState } from 'react'
 import { useStore } from '../store'
 import { escalatedCost } from '../lib/escalation'
 import { fmtMillions } from '../lib/format'
+import { itemMatches } from '../lib/trades'
+import type { LevelId, Trade } from '../types'
 import ScopeCard from './ScopeCard'
+
+interface Props {
+  showToggles: boolean
+  activeLevels: Set<LevelId>
+  activeTrades: Set<Trade>
+}
 
 // Continuous / Systems Work — not a time window but scope spread across the
 // whole construction (MEP/AV/structural/envelope/VT/food svc + aging). Each
 // card carries its own 2027/2028/2029 spend allocation. Full-width grid so the
 // allocation sliders have room to display without overflow.
-export default function ContinuousSection() {
+export default function ContinuousSection({
+  showToggles,
+  activeLevels,
+  activeTrades,
+}: Props) {
   const items = useStore((s) => s.items)
   const rates = useStore((s) => s.rates)
   const moveItem = useStore((s) => s.moveItem)
   const [dragOver, setDragOver] = useState(false)
 
+  // Subtotal + count reflect the FULL section — filtering is view-only.
   const contItems = items.filter((it) => it.phase === 'CONT')
   const subtotal = contItems
     .filter((it) => it.included)
     .reduce((sum, it) => sum + escalatedCost(it, rates), 0)
+
+  const filtering = activeLevels.size > 0 || activeTrades.size > 0
+  const visibleItems = filtering
+    ? contItems.filter((it) => itemMatches(it, activeLevels, activeTrades))
+    : contItems
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault()
@@ -63,9 +81,15 @@ export default function ContinuousSection() {
       </div>
 
       <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
-        {contItems.map((it) => (
-          <ScopeCard key={it.id} item={it} />
-        ))}
+        {visibleItems.length === 0 ? (
+          <div className="col-span-full flex items-center justify-center rounded-md border-[1.5px] border-dashed border-pcl-light px-3 py-6 text-center text-[11px] font-light text-pcl-mid">
+            No items match filters
+          </div>
+        ) : (
+          visibleItems.map((it) => (
+            <ScopeCard key={it.id} item={it} showToggles={showToggles} />
+          ))
+        )}
       </div>
     </section>
   )

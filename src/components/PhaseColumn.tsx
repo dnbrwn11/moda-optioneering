@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Item } from '../types'
+import type { Item, LevelId, Trade } from '../types'
 import type { PhaseDef } from '../lib/phases'
 import { useStore } from '../store'
 import { escalatedCost } from '../lib/escalation'
@@ -9,24 +9,44 @@ import {
   overloadMessage,
   phaseLoad,
 } from '../lib/guardrail'
+import { itemMatches } from '../lib/trades'
 import ScopeCard from './ScopeCard'
 
 interface Props {
   phase: PhaseDef
   items: Item[]
+  compact: boolean
+  showToggles: boolean
+  activeLevels: Set<LevelId>
+  activeTrades: Set<Trade>
 }
 
-export default function PhaseColumn({ phase, items }: Props) {
+export default function PhaseColumn({
+  phase,
+  items,
+  compact,
+  showToggles,
+  activeLevels,
+  activeTrades,
+}: Props) {
   const rates = useStore((s) => s.rates)
   const moveItem = useStore((s) => s.moveItem)
   const [dragOver, setDragOver] = useState(false)
 
+  // Totals + guardrail always reflect the FULL phase — filtering is a view.
   const includedItems = items.filter((it) => it.included)
   const subtotal = includedItems.reduce(
     (sum, it) => sum + escalatedCost(it, rates),
     0,
   )
   const load = phaseLoad(phase.id, items)
+
+  // Rendered cards respect the active level + trade filters (view only).
+  const filtering = activeLevels.size > 0 || activeTrades.size > 0
+  const visibleItems = filtering
+    ? items.filter((it) => itemMatches(it, activeLevels, activeTrades))
+    : items
+  const hiddenCount = items.length - visibleItems.length
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault()
@@ -65,6 +85,9 @@ export default function PhaseColumn({ phase, items }: Props) {
         <div className="mt-1 flex items-baseline justify-between">
           <span className="text-[11px] font-light text-pcl-mid">
             {items.length} {items.length === 1 ? 'item' : 'items'}
+            {filtering && hiddenCount > 0 && (
+              <span className="text-pcl-dark"> · {visibleItems.length} shown</span>
+            )}
           </span>
           <span className="text-base font-bold tabular-nums text-pcl-green">
             {fmtMillions(subtotal)}
@@ -87,14 +110,25 @@ export default function PhaseColumn({ phase, items }: Props) {
         )}
       </div>
 
-      {/* Cards */}
-      <div className="flex max-h-[58vh] flex-col gap-2 overflow-y-auto p-2">
+      {/* Cards — grow naturally; no inner scroll (page scrolls instead). */}
+      <div className="flex flex-col gap-2 p-2">
         {items.length === 0 ? (
           <div className="flex items-center justify-center rounded-md border-[1.5px] border-dashed border-[#cfe3d6] px-3 py-6 text-center text-[11px] font-light text-pcl-mid">
             Drop scope here
           </div>
+        ) : visibleItems.length === 0 ? (
+          <div className="flex items-center justify-center rounded-md border-[1.5px] border-dashed border-pcl-light px-3 py-6 text-center text-[11px] font-light text-pcl-mid">
+            No items match filters
+          </div>
         ) : (
-          items.map((it) => <ScopeCard key={it.id} item={it} />)
+          visibleItems.map((it) => (
+            <ScopeCard
+              key={it.id}
+              item={it}
+              compact={compact}
+              showToggles={showToggles}
+            />
+          ))
         )}
       </div>
     </div>
