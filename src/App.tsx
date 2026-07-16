@@ -2,15 +2,17 @@ import { useState } from 'react'
 import Header from './components/Header'
 import HeadlineBar from './components/HeadlineBar'
 import PhasingTab from './components/PhasingTab'
+import SequenceTab from './components/sequence/SequenceTab'
 import AnalyticsTab from './components/AnalyticsTab'
 import CapacityTab from './components/CapacityTab'
 import ResourcesTab from './components/ResourcesTab'
 import PrintReport from './components/PrintReport'
 
-type Tab = 'phasing' | 'analytics' | 'capacity' | 'resources'
+type Tab = 'phasing' | 'sequence' | 'analytics' | 'capacity' | 'resources'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'phasing', label: 'Phasing' },
+  { id: 'sequence', label: 'Sequence' },
   { id: 'analytics', label: 'Analytics' },
   { id: 'capacity', label: 'Capacity' },
   { id: 'resources', label: 'Resources' },
@@ -61,6 +63,8 @@ export default function App() {
         <main className="min-h-0 flex-1 overflow-y-auto">
           {tab === 'phasing' ? (
             <PhasingTab />
+          ) : tab === 'sequence' ? (
+            <SequenceTab />
           ) : tab === 'analytics' ? (
             <AnalyticsTab />
           ) : tab === 'capacity' ? (

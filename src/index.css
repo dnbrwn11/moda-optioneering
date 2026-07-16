@@ -53,6 +53,16 @@ input[type='range'] {
   accent-color: #005d2f;
 }
 
+/* Sequence-tab floating tooltip fade-in (~100ms). */
+@keyframes seq-tip-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* ---------------------------------------------------------------------------
    Print / Export PDF. The interactive app is hidden (.screen-app → display:none)
    and a dedicated screen-hidden report (.print-report) is revealed. Pure print

@@ -21,6 +21,9 @@ interface AppState {
   rates: EscalationRates
   // Seeded default escalated total, captured on load (for Δ vs baseline).
   baselineEscalatedTotal: number
+  // Seeded phase per item, captured on load — the Sequence tab marks any
+  // wedge whose current phase differs from this baseline assignment.
+  baselinePhaseById: Record<string, PhaseId>
 
   setRate: (year: Year, rate: number) => void
   resetRates: () => void
@@ -78,6 +81,10 @@ export const useStore = create<AppState>((set) => ({
   items: initialItems,
   rates: { ...DEFAULT_RATES },
   baselineEscalatedTotal: initialTotals.escalatedTotal,
+  baselinePhaseById: initialItems.reduce<Record<string, PhaseId>>((acc, it) => {
+    acc[it.id] = it.phase
+    return acc
+  }, {}),
 
   setRate: (year, rate) =>
     set((state) => ({ rates: { ...state.rates, [year]: rate } })),
