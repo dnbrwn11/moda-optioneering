@@ -6,15 +6,15 @@
 // The whole stack scales to fit the visible panel (max-height cap below) —
 // fitting all six plates plus the spine matters more than plate size.
 import { LEVEL_ACCENT } from '../../lib/levels'
-import { COURT_R, ellipsePath, greenScale, planXY, SYSTEMS_GOLD } from '../../lib/sequence'
+import { COURT_R, ellipsePath, planXY, stripCellFill, SYSTEMS_GOLD } from '../../lib/sequence'
 import type { ItemShade, LevelPlacements, ProjectFn, RingSpec } from '../../lib/sequence'
 import { PLAN_LEVELS, SEQUENCE_WINDOWS } from '../../data/arenaGeometry'
 import type { PlanLevelId } from '../../data/arenaGeometry'
 import LevelShapes, { placementAnchor } from './RingShapes'
+import CalloutLayer from './Callouts'
 import { SystemsTip } from './SequenceTooltip'
 import type { HoverHandler } from './SequenceTooltip'
-import { spreadLabelAnchors } from './viewTypes'
-import type { StaticLabel } from './viewTypes'
+import type { CalloutSpec } from './viewTypes'
 
 const W = 960
 const H = 900
@@ -71,7 +71,8 @@ export interface StackViewProps {
   selectedIdx: number | null
   contIntensity: number
   contLabel: string
-  staticLabels: StaticLabel[]
+  callouts: CalloutSpec[]
+  tall: boolean // panel collapsed — let the stack use more viewport height
   onItemClick: (ids: string[]) => void
   onHover: HoverHandler
 }
@@ -85,7 +86,8 @@ export default function StackView({
   selectedIdx,
   contIntensity,
   contLabel,
-  staticLabels,
+  callouts,
+  tall,
   onItemClick,
   onHover,
 }: StackViewProps) {
@@ -106,7 +108,7 @@ export default function StackView({
     <svg
       viewBox={`0 0 ${W} ${H}`}
       className="mx-auto block w-full"
-      style={{ maxHeight: '52vh' }}
+      style={{ maxHeight: tall ? '85vh' : '52vh' }}
       role="img"
       aria-label="Exploded level stack"
     >
@@ -234,7 +236,7 @@ export default function StackView({
                     width={13}
                     height={9}
                     rx={1.5}
-                    style={{ fill: greenScale(0.06 + 0.9 * v), transition: 'fill 600ms ease' }}
+                    style={{ fill: stripCellFill(v, wi, selectedIdx), transition: 'fill 600ms ease' }}
                     stroke={selectedIdx === wi ? '#36383D' : '#d5d7d4'}
                     strokeWidth={selectedIdx === wi ? 1.4 : 0.6}
                     onMouseEnter={(e) =>
@@ -251,43 +253,33 @@ export default function StackView({
           )
         })}
 
-      {/* Static labels for the selected window's largest wedges (top layer). */}
-      <g pointerEvents="none">
-        {(() => {
-          const anchors = staticLabels.map((lab, li) => {
-            const i = PLAN_LEVELS.indexOf(lab.level)
-            const ring = ringsByLevel.get(lab.level)
-            const lp = placementsByLevel.get(lab.level)
-            const placement = lp?.placed.find((p) => p.item.id === lab.id)
-            const anchor =
-              placement && ring ? placementAnchor(placement, ring, plateProject(i)) : null
-            // Distributed items label mid-band on their plate's SW arc,
-            // staggered per label so two bands never overprint.
-            return (
+      {/* Leader-line callouts for the selected window's largest wedges (top
+          layer) — anchors run through each plate's own projection so leaders
+          track the 3D positions. Left slots sit between the plate label rows;
+          the right gutter clears the spine caption. */}
+      <CalloutLayer
+        placed={callouts.map((c, li) => {
+          const i = PLAN_LEVELS.indexOf(c.level)
+          const ring = ringsByLevel.get(c.level)
+          const lp = placementsByLevel.get(c.level)
+          const placement = lp?.placed.find((p) => p.item.id === c.id)
+          const anchor =
+            placement && ring ? placementAnchor(placement, ring, plateProject(i)) : null
+          // Distributed items anchor mid-band on their plate's SW arc,
+          // staggered per callout so two bands never share a dot.
+          return {
+            spec: c,
+            anchor:
               anchor ??
               (ring
                 ? plateProject(i)(...planXY(205 + li * 18, (ring.inner + ring.outer) / 2))
-                : ([CX + S * 0.5, plateCy(i) + PLATE_RY + 20 + li * 13] as const))
-            )
-          })
-          return spreadLabelAnchors(anchors).map(([x, y], li) => (
-            <text
-              key={staticLabels[li].id}
-              x={x}
-              y={y}
-              textAnchor="middle"
-              fontSize={11}
-              fontWeight={700}
-              fill="#1d3b2a"
-              stroke="#ffffff"
-              strokeWidth={3}
-              paintOrder="stroke"
-            >
-              {staticLabels[li].text}
-            </text>
-          ))
-        })()}
-      </g>
+                : ([CX + S * 0.5, plateCy(i) + PLATE_RY + 20 + li * 13] as const)),
+          }
+        })}
+        centerX={CX}
+        left={{ innerX: 196, slots: [310, 454, 598] }}
+        right={{ innerX: 740, slots: [280, 420, 560] }}
+      />
 
       {/* One shared N arrow beside the stack — north is the top-back of every
           plate. */}

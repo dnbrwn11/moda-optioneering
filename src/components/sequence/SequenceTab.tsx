@@ -4,7 +4,7 @@
 // assignments recompute everything here on the fly.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from '../../store'
-import { useTotals } from '../../lib/selectors'
+import { useRefPhaseById, useTotals } from '../../lib/selectors'
 import { escalatedCost } from '../../lib/escalation'
 import { fmtMillions } from '../../lib/format'
 import {
@@ -24,14 +24,29 @@ import PlanView from './PlanView'
 import StackView from './StackView'
 import Scrubber from './Scrubber'
 import CashFlowStrip from './CashFlowStrip'
-import WindowPanel from './WindowPanel'
+import WindowPanel, { CollapsedWindowCard } from './WindowPanel'
 import { FloatingTooltip } from './SequenceTooltip'
 import type { TipState } from './SequenceTooltip'
-import type { StaticLabel } from './viewTypes'
+import type { CalloutSpec } from './viewTypes'
 
 type ViewMode = 'stack' | 'plan'
 
 const PLAY_MS = 1500 // auto-advance cadence per window
+
+// Panel collapse defaults per view (expanded in 2D Plan, collapsed in 3D
+// Stack); the user's choice persists per view for the session.
+const PANEL_COLLAPSE_KEY = 'seq-panel-collapsed'
+const DEFAULT_COLLAPSED: Record<ViewMode, boolean> = { plan: false, stack: true }
+
+function loadCollapsed(): Record<ViewMode, boolean> {
+  try {
+    const raw = sessionStorage.getItem(PANEL_COLLAPSE_KEY)
+    if (raw) return { ...DEFAULT_COLLAPSED, ...(JSON.parse(raw) as Partial<Record<ViewMode, boolean>>) }
+  } catch {
+    // fall through to defaults
+  }
+  return DEFAULT_COLLAPSED
+}
 
 function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
   const opts: { id: ViewMode; label: string }[] = [
@@ -59,7 +74,9 @@ function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode
 export default function SequenceTab() {
   const items = useStore((s) => s.items)
   const rates = useStore((s) => s.rates)
-  const baselinePhaseById = useStore((s) => s.baselinePhaseById)
+  // Moved-item markers reference the comparison scenario when Compare is on,
+  // the Baseline assignments otherwise.
+  const refPhaseById = useRefPhaseById()
   const totals = useTotals()
 
   const [view, setView] = useState<ViewMode>('plan')
@@ -69,6 +86,25 @@ export default function SequenceTab() {
   const [detailIds, setDetailIds] = useState<string[] | null>(null)
   // Single floating hover tooltip (suppressed while Play animates).
   const [tip, setTip] = useState<TipState | null>(null)
+  // Right-panel collapse, per view. A wedge click while collapsed temporarily
+  // expands the panel (tempExpanded) until the scope detail is closed.
+  const [collapsedByView, setCollapsedByView] = useState<Record<ViewMode, boolean>>(loadCollapsed)
+  const [tempExpanded, setTempExpanded] = useState(false)
+
+  const setCollapsed = (v: ViewMode, value: boolean) => {
+    setTempExpanded(false)
+    setCollapsedByView((prev) => {
+      const next = { ...prev, [v]: value }
+      try {
+        sessionStorage.setItem(PANEL_COLLAPSE_KEY, JSON.stringify(next))
+      } catch {
+        // session-only nicety — ignore storage failures
+      }
+      return next
+    })
+  }
+
+  const collapsed = collapsedByView[view] && !tempExpanded
 
   const selRef = useRef(selectedIdx)
   selRef.current = selectedIdx
@@ -136,6 +172,13 @@ export default function SequenceTab() {
   const onItemClick = (ids: string[]) => {
     pause()
     setDetailIds(ids)
+    // Collapsed panel: surface the scope detail by temporarily expanding.
+    if (collapsedByView[view]) setTempExpanded(true)
+  }
+
+  const onCloseDetail = () => {
+    setDetailIds(null)
+    setTempExpanded(false) // re-collapse if the expand was click-triggered
   }
 
   // ── Live derivations ──────────────────────────────────────────────────────
@@ -157,15 +200,15 @@ export default function SequenceTab() {
     () =>
       new Set(
         items
-          .filter((it) => baselinePhaseById[it.id] !== undefined && it.phase !== baselinePhaseById[it.id])
+          .filter((it) => refPhaseById[it.id] !== undefined && it.phase !== refPhaseById[it.id])
           .map((it) => it.id),
       ),
-    [items, baselinePhaseById],
+    [items, refPhaseById],
   )
 
-  // Static $ labels: only the 3 largest wedges of the selected window —
-  // legibility on a projector beats density.
-  const staticLabels = useMemo<StaticLabel[]>(() => {
+  // Gutter callouts: only the 3 largest wedges of the selected window —
+  // legibility on a projector beats density. None in the ALL view.
+  const callouts = useMemo<CalloutSpec[]>(() => {
     if (!selectedWindow) return []
     return items
       .filter((it) => it.included && it.phase === selectedWindow.phase && it.id in GEOMETRY_BY_ID)
@@ -175,7 +218,8 @@ export default function SequenceTab() {
       .map(({ it, spend }) => ({
         id: it.id,
         level: GEOMETRY_BY_ID[it.id].level,
-        text: `${it.name.length > 24 ? `${it.name.slice(0, 23)}…` : it.name} · ${fmtMillions(spend)}`,
+        name: it.name.length > 24 ? `${it.name.slice(0, 23)}…` : it.name,
+        money: fmtMillions(spend),
       }))
   }, [items, rates, selectedWindow])
 
@@ -193,7 +237,8 @@ export default function SequenceTab() {
     selectedIdx,
     contIntensity,
     contLabel,
-    staticLabels,
+    callouts,
+    tall: collapsed,
     onItemClick,
     onHover,
   }
@@ -211,15 +256,18 @@ export default function SequenceTab() {
           view={view}
           onChange={(v) => {
             pause()
+            setTempExpanded(false)
             setView(v)
           }}
         />
       </div>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-        {/* Visual + synced cash-flow strip. Any pointer-down pauses Play. */}
+        {/* Visual + synced cash-flow strip. Any pointer-down pauses Play.
+            With the panel collapsed the section takes the full row and the
+            compact window card floats over the canvas top-right. */}
         <section
-          className="min-w-0 flex-1 rounded-lg border border-pcl-light bg-white p-3"
+          className="relative min-w-0 flex-1 rounded-lg border border-pcl-light bg-white p-3"
           onPointerDownCapture={() => {
             if (playing) pause()
           }}
@@ -237,19 +285,29 @@ export default function SequenceTab() {
             />
           </div>
           <p className="mt-2 text-[10px] font-light italic text-pcl-mid">{SCHEMATIC_FOOTNOTE}</p>
+          {collapsed && (
+            <CollapsedWindowCard
+              stats={stats}
+              totals={totals}
+              onExpand={() => setCollapsed(view, false)}
+            />
+          )}
         </section>
 
-        <div className="w-full lg:w-[35%] lg:shrink-0">
-          <WindowPanel
-            stats={stats}
-            totals={totals}
-            items={items}
-            rates={rates}
-            baselinePhaseById={baselinePhaseById}
-            detailIds={detailIds}
-            onCloseDetail={() => setDetailIds(null)}
-          />
-        </div>
+        {!collapsed && (
+          <div className="w-full lg:w-[35%] lg:shrink-0">
+            <WindowPanel
+              stats={stats}
+              totals={totals}
+              items={items}
+              rates={rates}
+              refPhaseById={refPhaseById}
+              detailIds={detailIds}
+              onCloseDetail={onCloseDetail}
+              onCollapse={() => setCollapsed(view, true)}
+            />
+          </div>
+        )}
       </div>
 
       {/* The one floating tooltip instance — portaled to the app root,

@@ -6,18 +6,18 @@ import {
   annulusPath,
   COURT_R,
   ellipsePath,
-  greenScale,
   planXY,
+  stripCellFill,
   SYSTEMS_GOLD,
 } from '../../lib/sequence'
 import type { ItemShade, LevelPlacements, ProjectFn, RingSpec } from '../../lib/sequence'
 import { PLAN_LEVELS, SEQUENCE_WINDOWS } from '../../data/arenaGeometry'
 import type { PlanLevelId } from '../../data/arenaGeometry'
 import LevelShapes, { placementAnchor } from './RingShapes'
+import CalloutLayer from './Callouts'
 import { SystemsTip } from './SequenceTooltip'
 import type { HoverHandler } from './SequenceTooltip'
-import { spreadLabelAnchors } from './viewTypes'
-import type { StaticLabel } from './viewTypes'
+import type { CalloutSpec } from './viewTypes'
 
 const W = 960
 const H = 680
@@ -36,7 +36,8 @@ export interface PlanViewProps {
   selectedIdx: number | null
   contIntensity: number
   contLabel: string
-  staticLabels: StaticLabel[]
+  callouts: CalloutSpec[]
+  tall: boolean // panel collapsed — let the visual use more viewport height
   onItemClick: (ids: string[]) => void
   onHover: HoverHandler
 }
@@ -50,7 +51,8 @@ export default function PlanView({
   selectedIdx,
   contIntensity,
   contLabel,
-  staticLabels,
+  callouts,
+  tall,
   onItemClick,
   onHover,
 }: PlanViewProps) {
@@ -61,7 +63,7 @@ export default function PlanView({
     <svg
       viewBox={`0 0 ${W} ${H}`}
       className="mx-auto block w-full"
-      style={{ maxHeight: '52vh' }}
+      style={{ maxHeight: tall ? '64vh' : '52vh' }}
       role="img"
       aria-label="Schematic sequencing plan"
     >
@@ -160,41 +162,29 @@ export default function PlanView({
         <path d={ellipsePath(COURT_R, project)} fill="none" stroke="#e2e4e1" strokeWidth={0.8} />
       </g>
 
-      {/* Static labels — the selected window's largest wedges only. */}
-      <g pointerEvents="none">
-        {(() => {
-          const anchors = staticLabels.map((lab, li) => {
-            const ring = ringsByLevel.get(lab.level)
-            const lp = placementsByLevel.get(lab.level)
-            const placement = lp?.placed.find((p) => p.item.id === lab.id)
-            const anchor = placement && ring ? placementAnchor(placement, ring, project) : null
-            // Distributed items anchor mid-band on their own ring's SW arc,
-            // staggered per label so two bands never overprint.
-            return (
+      {/* Leader-line callouts for the selected window's largest wedges —
+          fixed gutters clear of the halo, legend and systems caption. */}
+      <CalloutLayer
+        placed={callouts.map((c, li) => {
+          const ring = ringsByLevel.get(c.level)
+          const lp = placementsByLevel.get(c.level)
+          const placement = lp?.placed.find((p) => p.item.id === c.id)
+          const anchor = placement && ring ? placementAnchor(placement, ring, project) : null
+          // Distributed items anchor mid-band on their own ring's SW arc,
+          // staggered per callout so two bands never share a dot.
+          return {
+            spec: c,
+            anchor:
               anchor ??
               (ring
                 ? project(...planXY(205 + li * 14, (ring.inner + ring.outer) / 2))
-                : ([CX, CY + (0.6 * S) / 1.25 + li * 14] as const))
-            )
-          })
-          return spreadLabelAnchors(anchors).map(([x, y], li) => (
-            <text
-              key={staticLabels[li].id}
-              x={x}
-              y={y}
-              textAnchor="middle"
-              fontSize={11}
-              fontWeight={700}
-              fill="#1d3b2a"
-              stroke="#ffffff"
-              strokeWidth={3}
-              paintOrder="stroke"
-            >
-              {staticLabels[li].text}
-            </text>
-          ))
-        })()}
-      </g>
+                : ([CX, CY + (0.6 * S) / 1.25 + li * 14] as const)),
+          }
+        })}
+        centerX={CX}
+        left={{ innerX: 168, slots: [428, 478, 528] }}
+        right={{ innerX: 804, slots: [240, 336, 432] }}
+      />
 
       {/* Compass — N at top-center. */}
       <g pointerEvents="none">
@@ -223,7 +213,7 @@ export default function PlanView({
                   width={13}
                   height={9}
                   rx={1.5}
-                  style={{ fill: greenScale(0.06 + 0.9 * v), transition: 'fill 600ms ease' }}
+                  style={{ fill: stripCellFill(v, wi, selectedIdx), transition: 'fill 600ms ease' }}
                   stroke={selectedIdx === wi ? '#36383D' : '#d5d7d4'}
                   strokeWidth={selectedIdx === wi ? 1.4 : 0.6}
                   onMouseEnter={(e) =>

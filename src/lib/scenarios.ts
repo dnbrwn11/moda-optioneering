@@ -1,0 +1,200 @@
+// Scenario model: named snapshots of the working state — per-item phase,
+// include flag, CONT year-allocation, plus the four per-year escalation rates.
+// Nothing else (no view state, no status) is captured.
+//
+// Snapshots are id-keyed partial overlays, never full Item objects, so the
+// static catalog (base $, qty, names) always comes from the shipped
+// lineitems.json — a stale localStorage payload can never resurrect old
+// catalog data. applySnapshot doubles as the migration path: snapshot ids
+// missing from the catalog are ignored, catalog ids missing from a snapshot
+// fall back to their seeded defaults.
+import type {
+  ContAllocation,
+  EscalationRates,
+  Item,
+  LineItemData,
+  PhaseId,
+} from '../types'
+import rawData from '../data/lineitems.json'
+import { buildItems, DEFAULT_RATES } from './seeding'
+import { computeTotals } from './escalation'
+import type { Totals } from './escalation'
+import { CONT_YEARS, ESCALATION_YEARS, PHASE_BY_ID } from './phases'
+
+export interface ScenarioItemState {
+  phase: PhaseId
+  included: boolean
+  alloc: ContAllocation
+}
+
+export interface ScenarioSnapshot {
+  itemState: Record<string, ScenarioItemState>
+  rates: EscalationRates
+}
+
+export interface Scenario {
+  id: string
+  name: string
+  createdAt: number
+  updatedAt: number
+  snapshot: ScenarioSnapshot
+}
+
+export const BASELINE_ID = 'baseline'
+export const MAX_USER_SCENARIOS = 6
+
+// ── Snapshot / restore ─────────────────────────────────────────────────────
+
+export function snapshotFrom(items: Item[], rates: EscalationRates): ScenarioSnapshot {
+  const itemState: Record<string, ScenarioItemState> = {}
+  for (const it of items) {
+    itemState[it.id] = { phase: it.phase, included: it.included, alloc: { ...it.alloc } }
+  }
+  return { itemState, rates: { ...rates } }
+}
+
+// The single canonical seeded state — the source-reconciled shipped
+// assignments. Rebuilt from lineitems.json on every boot, so the Baseline
+// scenario always tracks the current catalog and can never be corrupted by
+// anything persisted.
+export const SEEDED_ITEMS: Item[] = buildItems(rawData as LineItemData)
+
+export const BASELINE_SCENARIO: Scenario = {
+  id: BASELINE_ID,
+  name: 'Baseline',
+  createdAt: 0,
+  updatedAt: 0,
+  snapshot: snapshotFrom(SEEDED_ITEMS, DEFAULT_RATES),
+}
+
+// Baseline totals are a program constant (catalog + seeded state + default
+// rates) — computed once, shared by the Δ-vs-Baseline KPI and print report.
+export const BASELINE_TOTALS: Totals = computeTotals(SEEDED_ITEMS, DEFAULT_RATES)
+
+// Overlay a snapshot's working state onto the live items (which carry the
+// catalog). Catalog fields and `status` pass through untouched.
+export function applySnapshot(items: Item[], snapshot: ScenarioSnapshot): Item[] {
+  const seeded = BASELINE_SCENARIO.snapshot.itemState
+  return items.map((it) => {
+    const s = snapshot.itemState[it.id] ?? seeded[it.id]
+    if (!s) return it
+    return { ...it, phase: s.phase, included: s.included, alloc: { ...s.alloc } }
+  })
+}
+
+// Field-wise equality over the captured state — drives the "modified" dot.
+// Ids missing from either snapshot resolve to seeded defaults, mirroring
+// applySnapshot, so equality is over effective state.
+export function snapshotsEqual(a: ScenarioSnapshot, b: ScenarioSnapshot): boolean {
+  for (const y of ESCALATION_YEARS) {
+    if (Math.abs((a.rates[y] ?? 0) - (b.rates[y] ?? 0)) > 1e-12) return false
+  }
+  const seeded = BASELINE_SCENARIO.snapshot.itemState
+  for (const it of SEEDED_ITEMS) {
+    const ea = a.itemState[it.id] ?? seeded[it.id]
+    const eb = b.itemState[it.id] ?? seeded[it.id]
+    if (ea.phase !== eb.phase || ea.included !== eb.included) return false
+    for (const y of CONT_YEARS) {
+      if (ea.alloc[y] !== eb.alloc[y]) return false
+    }
+  }
+  return true
+}
+
+// ── Persistence (localStorage, single-user trusted tool) ───────────────────
+
+export const STORAGE_KEY = 'moda-optioneering:scenarios'
+const BACKUP_KEY = `${STORAGE_KEY}.backup`
+
+export interface PersistedState {
+  version: 1
+  activeScenarioId: string
+  compareScenarioId: string | null
+  scenarios: Scenario[] // user scenarios only — Baseline is never persisted
+  working: ScenarioSnapshot // current (possibly unsaved) working state
+}
+
+function finiteOr(v: unknown, fallback: number): number {
+  return typeof v === 'number' && Number.isFinite(v) ? v : fallback
+}
+
+// Coerce an untrusted snapshot to a valid one against the current catalog:
+// unknown ids dropped, bad phases/allocs/rates fall back to seeded defaults.
+function sanitizeSnapshot(raw: unknown): ScenarioSnapshot {
+  const src = (raw ?? {}) as { itemState?: unknown; rates?: unknown }
+  const rawItems = (src.itemState ?? {}) as Record<string, Partial<ScenarioItemState> | undefined>
+  const itemState: Record<string, ScenarioItemState> = {}
+  for (const it of SEEDED_ITEMS) {
+    const e = rawItems[it.id]
+    if (!e) continue // missing id → seeded default applied at restore time
+    const phase =
+      typeof e.phase === 'string' && e.phase in PHASE_BY_ID ? (e.phase as PhaseId) : it.phase
+    const allocRaw = (e.alloc ?? {}) as Partial<ContAllocation>
+    itemState[it.id] = {
+      phase,
+      included: typeof e.included === 'boolean' ? e.included : it.included,
+      alloc: {
+        2027: finiteOr(allocRaw[2027], it.alloc[2027]),
+        2028: finiteOr(allocRaw[2028], it.alloc[2028]),
+        2029: finiteOr(allocRaw[2029], it.alloc[2029]),
+      },
+    }
+  }
+  const ratesRaw = (src.rates ?? {}) as Partial<EscalationRates>
+  const rates = { ...DEFAULT_RATES }
+  for (const y of ESCALATION_YEARS) rates[y] = finiteOr(ratesRaw[y], DEFAULT_RATES[y])
+  return { itemState, rates }
+}
+
+function sanitizePersisted(raw: Record<string, unknown>): PersistedState {
+  const scenariosRaw = Array.isArray(raw.scenarios) ? raw.scenarios : []
+  const scenarios: Scenario[] = []
+  for (const s of scenariosRaw as Array<Record<string, unknown>>) {
+    if (!s || typeof s.id !== 'string' || !s.id || s.id === BASELINE_ID) continue
+    if (scenarios.length >= MAX_USER_SCENARIOS) break
+    scenarios.push({
+      id: s.id,
+      name: typeof s.name === 'string' && s.name.trim() ? s.name.trim() : 'Untitled',
+      createdAt: finiteOr(s.createdAt, 0),
+      updatedAt: finiteOr(s.updatedAt, 0),
+      snapshot: sanitizeSnapshot(s.snapshot),
+    })
+  }
+  const resolves = (id: unknown): id is string =>
+    typeof id === 'string' && (id === BASELINE_ID || scenarios.some((s) => s.id === id))
+  const activeScenarioId = resolves(raw.activeScenarioId) ? raw.activeScenarioId : BASELINE_ID
+  const compareScenarioId = resolves(raw.compareScenarioId) ? raw.compareScenarioId : null
+  const working =
+    raw.working != null
+      ? sanitizeSnapshot(raw.working)
+      : (scenarios.find((s) => s.id === activeScenarioId) ?? BASELINE_SCENARIO).snapshot
+  return { version: 1, activeScenarioId, compareScenarioId, scenarios, working }
+}
+
+// Load rules: parse failure or unknown version copies the raw payload to a
+// backup key (never destroy user data on a bad read) and boots from Baseline.
+export function loadPersisted(): PersistedState | null {
+  let raw: string | null = null
+  try {
+    raw = localStorage.getItem(STORAGE_KEY)
+    if (raw == null) return null
+    const parsed = JSON.parse(raw) as Record<string, unknown>
+    if (parsed?.version !== 1) throw new Error(`unknown scenario schema version`)
+    return sanitizePersisted(parsed)
+  } catch {
+    try {
+      if (raw != null) localStorage.setItem(BACKUP_KEY, raw)
+    } catch {
+      // storage unavailable — nothing to back up
+    }
+    return null
+  }
+}
+
+export function persistScenarios(payload: PersistedState): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+  } catch {
+    // storage unavailable/full — persistence is a nicety, never fatal
+  }
+}

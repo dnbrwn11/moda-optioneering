@@ -9,7 +9,7 @@ import type { Item } from '../../types'
 import { LEVEL_ACCENT } from '../../lib/levels'
 import {
   annulusPath,
-  COMPLETED_TINT,
+  COMPLETED_GRAY,
   COURTSIDE_BAND,
   planXY,
   wedgeCentroid,
@@ -28,7 +28,8 @@ import type { HoverHandler } from './SequenceTooltip'
 
 // Transitions run on fill/opacity only — elements keep stable keys, so window
 // scrubbing animates smoothly instead of re-mounting.
-const FILL_TRANSITION = 'fill 600ms ease, fill-opacity 600ms ease, opacity 600ms ease'
+const FILL_TRANSITION =
+  'fill 600ms ease, fill-opacity 600ms ease, opacity 600ms ease, stroke-opacity 600ms ease'
 
 // Aggregate shade for a ring's distributed tint band.
 function distributedFill(
@@ -44,7 +45,7 @@ function distributedFill(
     if (s.state === 'completed') anyCompleted = true
   }
   if (best) return { fill: best.fill, opacity: 0.5 }
-  if (anyCompleted) return { fill: COMPLETED_TINT, opacity: 0.45 }
+  if (anyCompleted) return { fill: COMPLETED_GRAY, opacity: 0.45 }
   return { fill: '#ffffff', opacity: 0 }
 }
 
@@ -116,6 +117,9 @@ export default function LevelShapes({
         const fill = shade?.fill ?? '#ffffff'
         const fillOpacity = semi ? 0.55 : 1
         const stroke = shade?.state === 'excluded' ? '#c6c8c5' : accent
+        const strokeOpacity = shade?.strokeOpacity ?? 1
+        // Future windows under a selection: faint 1px outline, near-white fill.
+        const strokeWidth = shade?.state === 'future' && strokeOpacity < 1 ? 1 : 0.8
         const paths =
           p.kind === 'annular'
             ? [
@@ -134,9 +138,9 @@ export default function LevelShapes({
                 d={d}
                 data-item-id={p.item.id}
                 fillRule={p.kind === 'annular' ? 'evenodd' : 'nonzero'}
-                style={{ fill, fillOpacity, transition: FILL_TRANSITION }}
+                style={{ fill, fillOpacity, strokeOpacity, transition: FILL_TRANSITION }}
                 stroke={stroke}
-                strokeWidth={0.8}
+                strokeWidth={strokeWidth}
                 strokeDasharray={semi ? '3 2' : undefined}
                 className="cursor-pointer"
                 onClick={() => onItemClick([p.item.id])}

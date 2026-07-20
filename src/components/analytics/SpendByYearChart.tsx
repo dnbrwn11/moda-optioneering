@@ -16,10 +16,28 @@ import { fmtMillions } from '../../lib/format'
 const axisTick = { fontSize: 11, fill: '#A6A6A6' }
 const fmtAxis = (v: number) => `$${Math.round(v / 1e6)}M`
 
-export default function SpendByYearChart({ totals }: { totals: Totals }) {
+export default function SpendByYearChart({
+  totals,
+  compareTotals = null,
+  compareName = null,
+}: {
+  totals: Totals
+  compareTotals?: Totals | null
+  compareName?: string | null
+}) {
   const [hidden, setHidden] = useState<Set<SeriesKey>>(new Set())
   const data = spendByYearByKind(totals)
   const visible = SERIES.filter((s) => !hidden.has(s.key))
+
+  // Compare mode: merge the comparison scenario's per-year stacks into the
+  // same rows under `cmp:*` keys — rendered as a second, outlined stack.
+  const ghost = compareTotals ? spendByYearByKind(compareTotals) : null
+  const rows: Record<string, number | string>[] = ghost
+    ? data.map((d, i) => ({
+        ...d,
+        ...Object.fromEntries(SERIES.map((s) => [`cmp:${s.key}`, ghost[i][s.key]])),
+      }))
+    : data.map((d) => ({ ...d }))
 
   function toggle(key: SeriesKey) {
     setHidden((prev) => {
@@ -73,11 +91,20 @@ export default function SpendByYearChart({ totals }: { totals: Totals }) {
             </button>
           )
         })}
+        {ghost && (
+          <span className="flex items-center gap-1.5 px-1 py-1 text-[11px] font-light italic text-pcl-mid">
+            <span
+              className="h-2.5 w-2.5 rounded-sm border border-dashed border-pcl-mid"
+              aria-hidden
+            />
+            outlined: {compareName ?? 'comparison'}
+          </span>
+        )}
       </div>
 
       <div className="h-64 w-full">
         <ResponsiveContainer>
-          <BarChart data={data} margin={{ top: 8, right: 8, bottom: 4, left: 4 }}>
+          <BarChart data={rows} margin={{ top: 8, right: 8, bottom: 4, left: 4 }}>
             <CartesianGrid vertical={false} stroke="#ececeb" />
             <XAxis
               dataKey="label"
@@ -113,6 +140,22 @@ export default function SpendByYearChart({ totals }: { totals: Totals }) {
                 isAnimationActive={false}
               />
             ))}
+            {/* Ghosted comparison stack — transparent fill, dashed outline. */}
+            {ghost &&
+              SERIES.map((s) => (
+                <Bar
+                  key={`cmp:${s.key}`}
+                  dataKey={`cmp:${s.key}`}
+                  name={`${s.label} (${compareName ?? 'comparison'})`}
+                  stackId="compare"
+                  fill="transparent"
+                  stroke={s.color}
+                  strokeWidth={1.2}
+                  strokeDasharray="4 3"
+                  hide={hidden.has(s.key)}
+                  isAnimationActive={false}
+                />
+              ))}
           </BarChart>
         </ResponsiveContainer>
       </div>

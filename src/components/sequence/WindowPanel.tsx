@@ -47,14 +47,75 @@ function StatRow({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
+// Compact floating stand-in for the collapsed panel — anchored over the
+// canvas top-right so the visual can take (almost) the full row width.
+export function CollapsedWindowCard({
+  stats,
+  totals,
+  onExpand,
+}: {
+  stats: WindowStats | null
+  totals: Totals
+  onExpand: () => void
+}) {
+  const cumulative = useCountUp(stats ? stats.cumulative : totals.escalatedTotal)
+  const kind = stats ? (PHASE_BY_ID[stats.window.phase].kind as 'offseason' | 'during-season') : null
+  return (
+    <div className="absolute right-3 top-3 z-10 w-56 rounded-md border border-pcl-light bg-white/95 p-2.5 shadow-md backdrop-blur-sm">
+      <div className="flex items-center justify-between gap-2">
+        {stats ? (
+          <span
+            className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"
+            style={{ backgroundColor: kind ? KIND_COLORS[kind] : '#36383D' }}
+          >
+            {stats.window.label}
+          </span>
+        ) : (
+          <span className="text-[10px] font-bold uppercase tracking-wider text-pcl-green">
+            Full Program
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={onExpand}
+          aria-label="Expand window panel"
+          title="Expand panel"
+          className="rounded px-1 text-sm font-bold leading-none text-pcl-mid hover:text-pcl-dark"
+        >
+          ⤢
+        </button>
+      </div>
+      <div className="mt-1.5 flex items-baseline gap-1.5">
+        <span className="text-lg font-bold leading-none tabular-nums text-pcl-green">
+          {fmtMillions(cumulative)}
+        </span>
+        <span className="text-[10px] font-medium tabular-nums text-pcl-dark">
+          {fmtPct(stats ? stats.pctComplete : 1, 0)} complete
+        </span>
+      </div>
+      {stats && (
+        <div className="mt-1 flex items-baseline justify-between gap-2 text-[11px]">
+          <span className="font-medium uppercase tracking-wider text-pcl-mid">Window</span>
+          <span className="font-bold tabular-nums text-pcl-dark">
+            {fmtMillions(stats.windowTotal)}
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export interface WindowPanelProps {
   stats: WindowStats | null // null = all-windows default state
   totals: Totals
   items: Item[]
   rates: EscalationRates
-  baselinePhaseById: Record<string, PhaseId>
+  // Reference phases for the "moved" badge — comparison scenario when Compare
+  // is on, Baseline otherwise (supplied by SequenceTab via useRefPhaseById).
+  refPhaseById: Record<string, PhaseId>
   detailIds: string[] | null
   onCloseDetail: () => void
+  onCollapse: () => void
 }
 
 export default function WindowPanel({
@@ -62,9 +123,10 @@ export default function WindowPanel({
   totals,
   items,
   rates,
-  baselinePhaseById,
+  refPhaseById,
   detailIds,
   onCloseDetail,
+  onCollapse,
 }: WindowPanelProps) {
   const cumulative = useCountUp(stats ? stats.cumulative : totals.escalatedTotal)
   const detailItems = detailIds
@@ -74,9 +136,19 @@ export default function WindowPanel({
   const kind = stats ? (PHASE_BY_ID[stats.window.phase].kind as 'offseason' | 'during-season') : null
 
   return (
-    <aside className="flex flex-col gap-3 rounded-lg border border-pcl-light bg-white p-4">
+    <aside className="relative flex flex-col gap-3 rounded-lg border border-pcl-light bg-white p-4">
+      {/* Collapse to the compact floating card over the canvas. */}
+      <button
+        type="button"
+        onClick={onCollapse}
+        aria-label="Collapse window panel"
+        title="Collapse panel"
+        className="absolute right-2 top-2 rounded px-1 text-sm font-bold leading-none text-pcl-mid hover:text-pcl-dark"
+      >
+        »
+      </button>
       {/* Window identity. */}
-      <div>
+      <div className="pr-5">
         {stats ? (
           <>
             <div className="flex items-center gap-2">
@@ -193,7 +265,7 @@ export default function WindowPanel({
           <div className="mt-1.5 flex max-h-56 flex-col gap-2 overflow-y-auto">
             {detailItems.map((it) => {
               const def = PHASE_BY_ID[it.phase]
-              const moved = baselinePhaseById[it.id] !== undefined && baselinePhaseById[it.id] !== it.phase
+              const moved = refPhaseById[it.id] !== undefined && refPhaseById[it.id] !== it.phase
               const note = GEOMETRY_BY_ID[it.id]?.note
               return (
                 <div key={it.id} className="border-b border-pcl-light/60 pb-2 last:border-b-0">
@@ -211,7 +283,7 @@ export default function WindowPanel({
                     <span>·</span>
                     <span>{def.year === null ? 'Continuous' : def.name}</span>
                     {moved && (
-                      <span className="font-bold text-[#8a6d00]" title="Phase differs from baseline assignment">
+                      <span className="font-bold text-[#8a6d00]" title="Phase differs from the reference scenario (comparison when Compare is on, Baseline otherwise)">
                         ◆ moved
                       </span>
                     )}

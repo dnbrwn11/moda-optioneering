@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { Item, ItemStatus } from '../types'
 import { useStore } from '../store'
+import { useRefPhaseById } from '../lib/selectors'
 import { escalatedCost } from '../lib/escalation'
 import { allocSum } from '../lib/alloc'
-import { CONT_YEARS } from '../lib/phases'
+import { CONT_YEARS, PHASE_BY_ID } from '../lib/phases'
 import { fmtFull } from '../lib/format'
 import { TRADE_ACCENT } from '../lib/trades'
 
@@ -123,6 +124,8 @@ export default function ScopeCard({
   const rates = useStore((s) => s.rates)
   const toggleIncluded = useStore((s) => s.toggleIncluded)
   const setStatus = useStore((s) => s.setStatus)
+  const compareOn = useStore((s) => s.compareScenarioId !== null)
+  const refPhaseById = useRefPhaseById()
   const [confirmOpen, setConfirmOpen] = useState(false)
   // Disable card drag while a slider is being manipulated, so dragging the
   // thumb doesn't start a card drag. Re-enabled on any pointer release.
@@ -142,6 +145,18 @@ export default function ScopeCard({
 
   const esc = escalatedCost(item, rates)
   const escalatedUp = item.included && esc > item.base + 0.5
+
+  // Compare mode: badge items whose phase differs from the comparison
+  // scenario's assignment — moved-marker palette (matches the sequence ◆).
+  const refPhase = refPhaseById[item.id]
+  const wasBadge = compareOn && refPhase !== undefined && refPhase !== item.phase && (
+    <span
+      className="shrink-0 rounded bg-pcl-yellow/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#8a6d00]"
+      title={`${PHASE_BY_ID[refPhase].name} in comparison scenario`}
+    >
+      was {PHASE_BY_ID[refPhase].short}
+    </span>
+  )
 
   function handleToggle() {
     // "Required" items: excluding needs a confirm — selling point that PCL
@@ -218,6 +233,7 @@ export default function ScopeCard({
         >
           {item.name}
         </span>
+        {wasBadge}
         {!showToggles && !item.included && <ExcludedMark />}
         <span
           className={`shrink-0 text-xs font-bold tabular-nums ${
@@ -254,6 +270,7 @@ export default function ScopeCard({
               (native HTML5 DnD); this is a visual cue only. */}
           <Grip />
           <span className={LEVEL_CHIP}>{item.level}</span>
+          {wasBadge}
         </span>
         {/* Include toggle — or an "excluded" mark when scope toggles are off. */}
         {showToggles ? (

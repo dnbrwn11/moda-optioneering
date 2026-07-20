@@ -278,18 +278,31 @@ export function computeWindowStats(
 }
 
 // ── Shading ────────────────────────────────────────────────────────────────
-// Selected window: white → deep PCL green by that window's escalated spend
-// (share of the window's largest discrete item). Earlier windows keep a flat
-// "completed" tint so scrubbing reads as progress; later windows stay white.
+// Three-state language when a window is selected: prior windows flat neutral
+// gray ("done"), the selected window ramps white → deep PCL green by escalated
+// spend (share of the window's largest discrete item), later windows near-white
+// with a faint outline. No selection (ALL view) keeps every wedge white.
 const PCL_GREEN: [number, number, number] = [0, 93, 47]
+const DONE_GRAY: [number, number, number] = [96, 100, 97]
 
-export function greenScale(t: number): string {
+function ramp(target: [number, number, number], t: number): string {
   const k = Math.max(0, Math.min(1, t))
-  const c = PCL_GREEN.map((ch) => Math.round(255 + (ch - 255) * k))
+  const c = target.map((ch) => Math.round(255 + (ch - 255) * k))
   return `rgb(${c[0]}, ${c[1]}, ${c[2]})`
 }
 
-export const COMPLETED_TINT = greenScale(0.28)
+export function greenScale(t: number): string {
+  return ramp(PCL_GREEN, t)
+}
+
+export function grayScale(t: number): string {
+  return ramp(DONE_GRAY, t)
+}
+
+// Flat "completed" wedge fill — no intensity ramp; done work all reads alike.
+export const COMPLETED_GRAY = '#B8BDB9'
+// Near-white "not yet" fill for future windows of the selected sequence.
+export const FUTURE_FILL = '#fcfcfb'
 
 // Building Systems (continuous) accent — muted gold (desaturated PCL-yellow
 // family), clearly distinct from the green intensity ramp. Used for the 2D
@@ -301,6 +314,7 @@ export type ShadeState = 'excluded' | 'future' | 'completed' | 'active'
 export interface ItemShade {
   state: ShadeState
   fill: string
+  strokeOpacity: number // faded outlines for completed/future under a selection
   intensity: number // 0..1 — active items' spend share of the window max
   spend: number // escalated $ in the selected window (active items)
 }
@@ -323,25 +337,35 @@ export function computeShades(
   for (const it of items) {
     if (!(it.id in GEOMETRY_BY_ID)) continue
     if (!it.included) {
-      shades.set(it.id, { state: 'excluded', fill: '#eceeed', intensity: 0, spend: 0 })
+      shades.set(it.id, { state: 'excluded', fill: '#eceeed', strokeOpacity: 1, intensity: 0, spend: 0 })
       continue
     }
     if (!selected) {
-      shades.set(it.id, { state: 'future', fill: '#ffffff', intensity: 0, spend: 0 })
+      shades.set(it.id, { state: 'future', fill: '#ffffff', strokeOpacity: 1, intensity: 0, spend: 0 })
       continue
     }
     const spend = itemWindowSpend(it, rates, selected.phase)
     if (spend > 0) {
       const share = maxSpend > 0 ? spend / maxSpend : 1
       const t = 0.45 + 0.55 * share
-      shades.set(it.id, { state: 'active', fill: greenScale(t), intensity: share, spend })
+      shades.set(it.id, { state: 'active', fill: greenScale(t), strokeOpacity: 1, intensity: share, spend })
     } else if (windowIndex(it.phase) < selected.index) {
-      shades.set(it.id, { state: 'completed', fill: COMPLETED_TINT, intensity: 0, spend: 0 })
+      shades.set(it.id, { state: 'completed', fill: COMPLETED_GRAY, strokeOpacity: 0.55, intensity: 0, spend: 0 })
     } else {
-      shades.set(it.id, { state: 'future', fill: '#ffffff', intensity: 0, spend: 0 })
+      shades.set(it.id, { state: 'future', fill: FUTURE_FILL, strokeOpacity: 0.3, intensity: 0, spend: 0 })
     }
   }
   return shades
+}
+
+// Mini-strip cell fill under the same three-state language: past windows keep
+// their intensity but in gray, the selected window keeps the green ramp,
+// future windows fade to a faint hint. No selection → all-windows green.
+export function stripCellFill(v: number, wi: number, selectedIdx: number | null): string {
+  const t = 0.06 + 0.9 * v
+  if (selectedIdx === null || wi === selectedIdx) return greenScale(t)
+  if (wi < selectedIdx) return grayScale(t)
+  return greenScale(t * 0.22)
 }
 
 // CONT wash intensity per window: that window's folded CONT spend relative to

@@ -1,5 +1,6 @@
 import { useStore } from '../store'
 import { useTotals } from '../lib/selectors'
+import { BASELINE_TOTALS } from '../lib/scenarios'
 import { escalatedCost } from '../lib/escalation'
 import { PHASES, TIME_PHASES, ESCALATION_YEARS } from '../lib/phases'
 import { TRADE_SHORT } from '../lib/trades'
@@ -40,7 +41,9 @@ function KpiCard({
 export default function PrintReport() {
   const items = useStore((s) => s.items)
   const rates = useStore((s) => s.rates)
-  const baseline = useStore((s) => s.baselineEscalatedTotal)
+  // Print always deltas against Baseline (a program constant), regardless of
+  // any on-screen Compare selection — the report is a stable artifact.
+  const baseline = BASELINE_TOTALS.escalatedTotal
   const totals = useTotals()
 
   const delta = totals.escalatedTotal - baseline

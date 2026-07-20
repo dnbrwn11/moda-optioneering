@@ -1,5 +1,5 @@
-import { useStore } from '../store'
-import { useTotals } from '../lib/selectors'
+import { useCompareScenario, useScenarioTotals, useTotals } from '../lib/selectors'
+import { BASELINE_TOTALS } from '../lib/scenarios'
 import { fmtDeltaMillions, fmtDeltaPct, fmtMillions } from '../lib/format'
 
 interface StatProps {
@@ -32,12 +32,23 @@ function Stat({ label, children, sub, hero }: StatProps) {
 
 export default function HeadlineBar() {
   const totals = useTotals()
-  const baseline = useStore((s) => s.baselineEscalatedTotal)
+  // Δ reference: the compare target when Compare is on, Baseline otherwise.
+  const compare = useCompareScenario()
+  const compareTotals = useScenarioTotals(compare)
+  const refTotals = compareTotals ?? BASELINE_TOTALS
 
-  const delta = totals.escalatedTotal - baseline
-  const deltaPct = baseline ? delta / baseline : 0
+  const delta = totals.escalatedTotal - refTotals.escalatedTotal
+  const deltaPct = refTotals.escalatedTotal ? delta / refTotals.escalatedTotal : 0
   const deltaColor =
     delta > 0 ? 'text-pcl-dark' : delta < 0 ? 'text-pcl-green' : 'text-pcl-mid'
+
+  // Per-year spend deltas — only shown while comparing.
+  const perYearDeltas = compare
+    ? ([2027, 2028, 2029] as const).map((y) => ({
+        year: y,
+        delta: totals.spendByYear[y] - refTotals.spendByYear[y],
+      }))
+    : null
 
   return (
     <div className="grid grid-cols-2 divide-x divide-pcl-light border-b border-pcl-light bg-white md:grid-cols-4">
@@ -49,7 +60,28 @@ export default function HeadlineBar() {
         {fmtMillions(totals.baseTotal)}
       </Stat>
 
-      <Stat label="Δ vs Baseline">
+      <Stat
+        label={compare ? `Δ vs ${compare.name}` : 'Δ vs Baseline'}
+        sub={
+          perYearDeltas && (
+            <span className="tabular-nums">
+              {perYearDeltas.map((d, i) => (
+                <span key={d.year}>
+                  {i > 0 && ' · '}
+                  ’{String(d.year).slice(2)}{' '}
+                  <span
+                    className={
+                      d.delta > 0 ? 'text-pcl-dark' : d.delta < 0 ? 'text-pcl-green' : 'text-pcl-mid'
+                    }
+                  >
+                    {fmtDeltaMillions(d.delta)}
+                  </span>
+                </span>
+              ))}
+            </span>
+          )
+        }
+      >
         <span className={deltaColor}>{fmtDeltaMillions(delta)}</span>
         <span className={`ml-2 text-base ${deltaColor}`}>
           {fmtDeltaPct(deltaPct)}

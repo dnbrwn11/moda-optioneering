@@ -1,5 +1,5 @@
 import { useStore } from '../store'
-import { useTotals } from '../lib/selectors'
+import { useCompareScenario, useScenarioTotals, useTotals } from '../lib/selectors'
 import { duringSeasonShare, peakYear } from '../lib/analytics'
 import { fmtMillions, fmtPct } from '../lib/format'
 import SpendByYearChart from './analytics/SpendByYearChart'
@@ -30,6 +30,10 @@ function Stat({ label, value, sub }: StatProps) {
 export default function AnalyticsTab() {
   const items = useStore((s) => s.items)
   const totals = useTotals()
+  // Compare mode: the comparison scenario's totals overlay the spend-per-year
+  // chart as a ghosted outlined series.
+  const compare = useCompareScenario()
+  const compareTotals = useScenarioTotals(compare)
 
   const dsShare = duringSeasonShare(totals)
   const peak = peakYear(totals)
@@ -60,7 +64,11 @@ export default function AnalyticsTab() {
       {/* Charts */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SpendByWindowChart totals={totals} />
-        <SpendByYearChart totals={totals} />
+        <SpendByYearChart
+          totals={totals}
+          compareTotals={compareTotals}
+          compareName={compare?.name ?? null}
+        />
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SensitivityChart items={items} totals={totals} />
