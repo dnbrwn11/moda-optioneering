@@ -4,7 +4,7 @@ import EscalationChip from './EscalationChip'
 
 export default function Header() {
   return (
-    <header className="relative z-30 flex items-center gap-6 border-b-4 border-pcl-yellow bg-pcl-green px-6 py-3">
+    <header className="relative z-30 flex items-center gap-6 border-b-4 border-brand-yellow bg-accent px-6 py-3">
       {/* PCL logo — constrained by height, width auto-scales (aspect kept). */}
       <img
         src="/logos/PCL_Construction.svg.png"
@@ -25,7 +25,7 @@ export default function Header() {
       <button
         type="button"
         onClick={() => window.print()}
-        className="flex shrink-0 items-center gap-1.5 rounded bg-pcl-yellow px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-pcl-dark shadow-sm transition-transform hover:-translate-y-px active:translate-y-0"
+        className="flex shrink-0 items-center gap-1.5 rounded bg-brand-yellow px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-ink shadow-sm transition-transform hover:-translate-y-px active:translate-y-0"
       >
         <svg viewBox="0 0 16 16" aria-hidden className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M4 6V2.5h8V6M4 12H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-1M4 10h8v3.5H4z" />

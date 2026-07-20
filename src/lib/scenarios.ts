@@ -1,6 +1,10 @@
 // Scenario model: named snapshots of the working state — per-item phase,
 // include flag, CONT year-allocation, plus the four per-year escalation rates.
-// Nothing else (no view state, no status) is captured.
+// Nothing else (no view state, no status, no funding class, no labor or
+// participation assumptions) is captured. Those are program-level attributes
+// shared across scenarios: they persist globally (PersistedState
+// fundingOverrides / laborFractions / laborGlobals / participation) but never
+// enter snapshots, so editing them never trips the scenario "modified" dot.
 //
 // Snapshots are id-keyed partial overlays, never full Item objects, so the
 // static catalog (base $, qty, names) always comes from the shipped
@@ -14,12 +18,20 @@ import type {
   Item,
   LineItemData,
   PhaseId,
+  Trade,
 } from '../types'
 import rawData from '../data/lineitems.json'
 import { buildItems, DEFAULT_RATES } from './seeding'
 import { computeTotals } from './escalation'
 import type { Totals } from './escalation'
 import { CONT_YEARS, ESCALATION_YEARS, PHASE_BY_ID } from './phases'
+import { FUNDING_CLASSES, FUNDING_DEFAULT_BY_ID } from './funding'
+import type { FundingClass, FundingOverrides } from './funding'
+import { GLOBAL_DEFAULTS, LABOR_FRACTION_DEFAULTS } from './resources'
+import type { GlobalAssumptions } from './resources'
+import { PARTICIPATION_DEFAULTS } from './participation'
+import type { ParticipationAssumptions } from './participation'
+import { TRADE_ORDER } from './trades'
 
 export interface ScenarioItemState {
   phase: PhaseId
@@ -112,6 +124,14 @@ export interface PersistedState {
   compareScenarioId: string | null
   scenarios: Scenario[] // user scenarios only — Baseline is never persisted
   working: ScenarioSnapshot // current (possibly unsaved) working state
+  // Catalog-level funding reclassifications (Funding Lens). Additive field —
+  // pre-feature payloads simply lack the key and sanitize to {}.
+  fundingOverrides: FundingOverrides
+  // Program-level planning assumptions (Resources staffing + Participation).
+  // Additive fields — pre-feature payloads sanitize to the shipped defaults.
+  laborFractions: Record<Trade, number>
+  laborGlobals: GlobalAssumptions
+  participation: ParticipationAssumptions
 }
 
 function finiteOr(v: unknown, fallback: number): number {
@@ -146,6 +166,59 @@ function sanitizeSnapshot(raw: unknown): ScenarioSnapshot {
   return { itemState, rates }
 }
 
+// Keep only overrides for ids in the current catalog with valid class values;
+// entries equal to the derived default are dropped (they carry no information).
+function sanitizeFundingOverrides(raw: unknown): FundingOverrides {
+  const src = (raw ?? {}) as Record<string, unknown>
+  const out: FundingOverrides = {}
+  for (const [id, v] of Object.entries(src)) {
+    if (!(id in FUNDING_DEFAULT_BY_ID)) continue
+    if (!FUNDING_CLASSES.includes(v as FundingClass)) continue
+    if (v === FUNDING_DEFAULT_BY_ID[id]) continue
+    out[id] = v as FundingClass
+  }
+  return out
+}
+
+// Fractional (0–1) assumption values: finite, clamped into range.
+function clamp01(v: unknown, fallback: number): number {
+  return Math.min(1, Math.max(0, finiteOr(v, fallback)))
+}
+
+// Positive planning quantities (rates, factors): finite and non-negative.
+function posOr(v: unknown, fallback: number): number {
+  return Math.max(0, finiteOr(v, fallback))
+}
+
+function sanitizeTradeFractions(
+  raw: unknown,
+  defaults: Record<Trade, number>,
+): Record<Trade, number> {
+  const src = (raw ?? {}) as Partial<Record<Trade, unknown>>
+  const out = {} as Record<Trade, number>
+  for (const t of TRADE_ORDER) out[t] = clamp01(src[t], defaults[t])
+  return out
+}
+
+function sanitizeLaborGlobals(raw: unknown): GlobalAssumptions {
+  const src = (raw ?? {}) as Partial<Record<keyof GlobalAssumptions, unknown>>
+  const out = { ...GLOBAL_DEFAULTS }
+  for (const k of Object.keys(GLOBAL_DEFAULTS) as (keyof GlobalAssumptions)[]) {
+    out[k] = posOr(src[k], GLOBAL_DEFAULTS[k])
+  }
+  return out
+}
+
+function sanitizeParticipation(raw: unknown): ParticipationAssumptions {
+  const src = (raw ?? {}) as Partial<Record<keyof ParticipationAssumptions, unknown>>
+  return {
+    tradePct: sanitizeTradeFractions(src.tradePct, PARTICIPATION_DEFAULTS.tradePct),
+    programGoal: clamp01(src.programGoal, PARTICIPATION_DEFAULTS.programGoal),
+    apprenticePct: clamp01(src.apprenticePct, PARTICIPATION_DEFAULTS.apprenticePct),
+    localHirePct: clamp01(src.localHirePct, PARTICIPATION_DEFAULTS.localHirePct),
+  }
+}
+
 function sanitizePersisted(raw: Record<string, unknown>): PersistedState {
   const scenariosRaw = Array.isArray(raw.scenarios) ? raw.scenarios : []
   const scenarios: Scenario[] = []
@@ -168,7 +241,18 @@ function sanitizePersisted(raw: Record<string, unknown>): PersistedState {
     raw.working != null
       ? sanitizeSnapshot(raw.working)
       : (scenarios.find((s) => s.id === activeScenarioId) ?? BASELINE_SCENARIO).snapshot
-  return { version: 1, activeScenarioId, compareScenarioId, scenarios, working }
+  const fundingOverrides = sanitizeFundingOverrides(raw.fundingOverrides)
+  return {
+    version: 1,
+    activeScenarioId,
+    compareScenarioId,
+    scenarios,
+    working,
+    fundingOverrides,
+    laborFractions: sanitizeTradeFractions(raw.laborFractions, LABOR_FRACTION_DEFAULTS),
+    laborGlobals: sanitizeLaborGlobals(raw.laborGlobals),
+    participation: sanitizeParticipation(raw.participation),
+  }
 }
 
 // Load rules: parse failure or unknown version copies the raw payload to a

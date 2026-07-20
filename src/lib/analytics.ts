@@ -5,13 +5,19 @@ import type { EscalationRates, Item, PhaseId, Year } from '../types'
 import { computeTotals, SEASON_WINDOWS } from './escalation'
 import type { Totals } from './escalation'
 import { TIME_PHASES } from './phases'
+import { kindContinuous, win } from './tokens'
 
-// Categorical series colors (validated CVD-safe, PCL brand family):
-//   during-season = PCL green · offseason = PCL indigo · continuous = PCL purple
+// Categorical series colors — from the design-token authority. The OS/DS
+// window pair also carries a border shade (KIND_BORDERS) for light-tint fills.
 export const KIND_COLORS = {
-  offseason: '#4E5BA8',
-  'during-season': '#0a7d43',
-  continuous: '#941F6E',
+  offseason: win.os.fill,
+  'during-season': win.ds.fill,
+  continuous: kindContinuous,
+} as const
+
+export const KIND_BORDERS = {
+  offseason: win.os.border,
+  'during-season': win.ds.border,
 } as const
 
 export const KIND_LABELS = {

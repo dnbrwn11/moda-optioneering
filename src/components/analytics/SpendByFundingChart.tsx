@@ -8,39 +8,37 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import type { Totals } from '../../lib/escalation'
-import { SERIES, spendByYearByKind } from '../../lib/analytics'
-import type { SeriesKey } from '../../lib/analytics'
+import { FUNDING_CAPTION, FUNDING_SERIES } from '../../lib/funding'
+import type { FundingClass, FundingYearStack } from '../../lib/funding'
 import { fmtMillions } from '../../lib/format'
 import { chart as CH, color as C } from '../../lib/tokens'
 
 const axisTick = { fontSize: 11, fill: C.inkMuted }
 const fmtAxis = (v: number) => `$${Math.round(v / 1e6)}M`
 
-export default function SpendByYearChart({
-  totals,
-  compareTotals = null,
+// Spend per year re-stacked by funding class — the Funding Lens counterpart of
+// SpendByYearChart (same years, same escalated dollars, different split).
+export default function SpendByFundingChart({
+  data,
+  ghost = null,
   compareName = null,
 }: {
-  totals: Totals
-  compareTotals?: Totals | null
+  data: FundingYearStack[]
+  // Comparison scenario's per-year funding stacks (same live classification).
+  ghost?: FundingYearStack[] | null
   compareName?: string | null
 }) {
-  const [hidden, setHidden] = useState<Set<SeriesKey>>(new Set())
-  const data = spendByYearByKind(totals)
-  const visible = SERIES.filter((s) => !hidden.has(s.key))
+  const [hidden, setHidden] = useState<Set<FundingClass>>(new Set())
+  const visible = FUNDING_SERIES.filter((s) => !hidden.has(s.key))
 
-  // Compare mode: merge the comparison scenario's per-year stacks into the
-  // same rows under `cmp:*` keys — rendered as a second, outlined stack.
-  const ghost = compareTotals ? spendByYearByKind(compareTotals) : null
   const rows: Record<string, number | string>[] = ghost
     ? data.map((d, i) => ({
         ...d,
-        ...Object.fromEntries(SERIES.map((s) => [`cmp:${s.key}`, ghost[i][s.key]])),
+        ...Object.fromEntries(FUNDING_SERIES.map((s) => [`cmp:${s.key}`, ghost[i][s.key]])),
       }))
     : data.map((d) => ({ ...d }))
 
-  function toggle(key: SeriesKey) {
+  function toggle(key: FundingClass) {
     setHidden((prev) => {
       const next = new Set(prev)
       if (next.has(key)) next.delete(key)
@@ -49,7 +47,6 @@ export default function SpendByYearChart({
     })
   }
 
-  // Visible totals recompute as series toggle on/off.
   const perYearVisible = data.map((d) => ({
     year: d.year,
     total: visible.reduce((s, ser) => s + d[ser.key], 0),
@@ -60,16 +57,17 @@ export default function SpendByYearChart({
     <section className="rounded-lg border border-line bg-white p-4">
       <div className="mb-1 flex items-baseline justify-between">
         <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
-          Spend per Year by Phase
+          Spend per Year by Funding Class
         </h3>
         <span className="text-xs font-medium tabular-nums text-ink">
           Visible: {fmtMillions(grandVisible)}
         </span>
       </div>
+      <p className="mb-2 text-[10px] font-light italic text-ink-muted">{FUNDING_CAPTION}</p>
 
-      {/* Clickable legend — toggles each series on/off. */}
+      {/* Clickable legend — toggles each class on/off. */}
       <div className="mb-3 flex flex-wrap gap-2">
-        {SERIES.map((s) => {
+        {FUNDING_SERIES.map((s) => {
           const off = hidden.has(s.key)
           return (
             <button
@@ -129,7 +127,7 @@ export default function SpendByYearChart({
                 fontSize: 12,
               }}
             />
-            {SERIES.map((s) => (
+            {FUNDING_SERIES.map((s, i) => (
               <Bar
                 key={s.key}
                 dataKey={s.key}
@@ -137,13 +135,13 @@ export default function SpendByYearChart({
                 stackId="spend"
                 fill={s.color}
                 hide={hidden.has(s.key)}
-                radius={s.key === 'continuous' ? [3, 3, 0, 0] : 0}
+                radius={i === FUNDING_SERIES.length - 1 ? [3, 3, 0, 0] : 0}
                 isAnimationActive={false}
               />
             ))}
             {/* Ghosted comparison stack — transparent fill, dashed outline. */}
             {ghost &&
-              SERIES.map((s) => (
+              FUNDING_SERIES.map((s) => (
                 <Bar
                   key={`cmp:${s.key}`}
                   dataKey={`cmp:${s.key}`}

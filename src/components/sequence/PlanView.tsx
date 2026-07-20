@@ -18,6 +18,7 @@ import CalloutLayer from './Callouts'
 import { SystemsTip } from './SequenceTooltip'
 import type { HoverHandler } from './SequenceTooltip'
 import type { CalloutSpec } from './viewTypes'
+import { color as C, seq as SEQ } from '../../lib/tokens'
 
 const W = 960
 const H = 680
@@ -83,14 +84,14 @@ export default function PlanView({
       <path
         d={ellipsePath(1.07, project)}
         fill="none"
-        stroke="#c9ccc9"
+        stroke={SEQ.structure.hairline}
         strokeWidth={0.8}
         pointerEvents="none"
       />
       <path
         d={ellipsePath(1.02, project)}
         fill="none"
-        stroke="#c9ccc9"
+        stroke={SEQ.structure.hairline}
         strokeWidth={0.8}
         pointerEvents="none"
       />
@@ -113,7 +114,7 @@ export default function PlanView({
             <path
               d={annulusPath(ring.inner, ring.outer, project)}
               fillRule="evenodd"
-              fill="#fefefd"
+              fill={SEQ.structure.planFill}
             />
             {lp && (
               <LevelShapes
@@ -129,7 +130,7 @@ export default function PlanView({
             <path
               d={ellipsePath(ring.outer, project)}
               fill="none"
-              stroke="#d5d7d4"
+              stroke={SEQ.structure.slab}
               strokeWidth={1}
               pointerEvents="none"
             />
@@ -146,8 +147,8 @@ export default function PlanView({
           width={0.2 * S}
           height={0.304 * S}
           rx={8}
-          fill="#f7f6f2"
-          stroke="#b9bcb8"
+          fill={SEQ.structure.court}
+          stroke={SEQ.structure.courtStroke}
           strokeWidth={1.2}
         />
         <line
@@ -155,11 +156,11 @@ export default function PlanView({
           y1={CY}
           x2={CX + 0.1 * S}
           y2={CY}
-          stroke="#c9ccc9"
+          stroke={SEQ.structure.hairline}
           strokeWidth={1}
         />
-        <circle cx={CX} cy={CY} r={0.032 * S} fill="none" stroke="#c9ccc9" strokeWidth={1} />
-        <path d={ellipsePath(COURT_R, project)} fill="none" stroke="#e2e4e1" strokeWidth={0.8} />
+        <circle cx={CX} cy={CY} r={0.032 * S} fill="none" stroke={SEQ.structure.hairline} strokeWidth={1} />
+        <path d={ellipsePath(COURT_R, project)} fill="none" stroke={SEQ.structure.faint} strokeWidth={0.8} />
       </g>
 
       {/* Leader-line callouts for the selected window's largest wedges —
@@ -188,8 +189,8 @@ export default function PlanView({
 
       {/* Compass — N at top-center. */}
       <g pointerEvents="none">
-        <path d={`M ${CX} 12 l 5 14 l -5 -4 l -5 4 Z`} fill="#36383D" />
-        <text x={CX + 12} y={25} fontSize={12} fontWeight={700} fill="#36383D">
+        <path d={`M ${CX} 12 l 5 14 l -5 -4 l -5 4 Z`} fill={C.ink} />
+        <text x={CX + 12} y={25} fontSize={12} fontWeight={700} fill={C.ink}>
           N
         </text>
       </g>
@@ -202,7 +203,7 @@ export default function PlanView({
           return (
             <g key={lvl}>
               <rect x={16} y={y - 9} width={9} height={9} rx={2} fill={LEVEL_ACCENT[lvl]} />
-              <text x={31} y={y} fontSize={11} fontWeight={500} fill="#36383D">
+              <text x={31} y={y} fontSize={11} fontWeight={500} fill={C.ink}>
                 {lvl === 'L100' ? 'L100 Event' : lvl === 'L200' ? 'L200 Concourse' : lvl === 'L300' ? 'L300 Club' : lvl === 'L400' ? 'L400 Suite' : lvl === 'L500' ? 'L500 Upper' : 'L700 Press'}
               </text>
               {cells.map((v, wi) => (
@@ -214,7 +215,7 @@ export default function PlanView({
                   height={9}
                   rx={1.5}
                   style={{ fill: stripCellFill(v, wi, selectedIdx), transition: 'fill 600ms ease' }}
-                  stroke={selectedIdx === wi ? '#36383D' : '#d5d7d4'}
+                  stroke={selectedIdx === wi ? C.ink : SEQ.structure.slab}
                   strokeWidth={selectedIdx === wi ? 1.4 : 0.6}
                   onMouseEnter={(e) =>
                     onHover(

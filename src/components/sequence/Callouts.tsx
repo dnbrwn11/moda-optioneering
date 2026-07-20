@@ -4,6 +4,7 @@
 // position; fixed vertical slots guarantee callouts never overlap the visual
 // or each other. All other wedge info stays hover-only (see SequenceTooltip).
 import type { CalloutSpec } from './viewTypes'
+import { color as C, seq as SEQ } from '../../lib/tokens'
 
 export interface PlacedCallout {
   spec: CalloutSpec
@@ -42,17 +43,17 @@ export default function CalloutLayer({
               y1={yBase + 4}
               x2={p.anchor[0]}
               y2={p.anchor[1]}
-              stroke="#9aa09b"
+              stroke={SEQ.structure.drawn}
               strokeWidth={1}
             />
-            <circle cx={p.anchor[0]} cy={p.anchor[1]} r={2.5} fill="#36383D" />
+            <circle cx={p.anchor[0]} cy={p.anchor[1]} r={2.5} fill={C.ink} />
             <text
               x={gutter.innerX}
               y={yBase}
               textAnchor={anchorAlign}
               fontSize={11}
               fontWeight={700}
-              fill="#36383D"
+              fill={C.ink}
             >
               {p.spec.name}
             </text>
@@ -62,7 +63,7 @@ export default function CalloutLayer({
               textAnchor={anchorAlign}
               fontSize={11}
               fontWeight={700}
-              fill="#005D2F"
+              fill={C.accent}
             >
               {p.spec.money}
             </text>

@@ -24,6 +24,14 @@ import {
   snapshotFrom,
 } from './lib/scenarios'
 import type { Scenario } from './lib/scenarios'
+import { FUNDING_DEFAULT_BY_ID } from './lib/funding'
+import type { FundingClass, FundingOverrides } from './lib/funding'
+import { GLOBAL_DEFAULTS, LABOR_FRACTION_DEFAULTS } from './lib/resources'
+import type { GlobalAssumptions } from './lib/resources'
+import { PARTICIPATION_DEFAULTS } from './lib/participation'
+import type { ParticipationAssumptions } from './lib/participation'
+import type { Trade } from './types'
+import { color as TOKEN } from './lib/tokens'
 
 const data = rawData as LineItemData
 
@@ -35,6 +43,17 @@ interface AppState {
   scenarios: Scenario[]
   activeScenarioId: string
   compareScenarioId: string | null
+  // Funding Lens — view dimension only. The toggle is shared UI state (never
+  // persisted); overrides are catalog-level departures from the derived
+  // default, persisted globally and outside scenario snapshots.
+  fundingLens: boolean
+  fundingOverrides: FundingOverrides
+  // Program-level planning assumptions, shared by the Resources and
+  // Participation tabs so both derive from one labor model. Persisted
+  // globally; never part of scenario snapshots.
+  laborFractions: Record<Trade, number>
+  laborGlobals: GlobalAssumptions
+  participation: ParticipationAssumptions
 
   setRate: (year: Year, rate: number) => void
   resetRates: () => void
@@ -43,6 +62,17 @@ interface AppState {
   setStatus: (id: string, status: ItemStatus) => void
   // Set one CONT year's % for an item; the other two rebalance to keep sum 100.
   setAlloc: (id: string, year: ContYear, value: number) => void
+  setFundingLens: (on: boolean) => void
+  setFundingClass: (id: string, cls: FundingClass) => void
+  setLaborFraction: (trade: Trade, v: number) => void
+  setLaborGlobal: (k: keyof GlobalAssumptions, v: number) => void
+  resetLaborAssumptions: () => void
+  setTradeParticipationPct: (trade: Trade, v: number) => void
+  setParticipationGlobal: (
+    k: 'programGoal' | 'apprenticePct' | 'localHirePct',
+    v: number,
+  ) => void
+  resetParticipation: () => void
 
   // Scenario lifecycle. Baseline is immutable: update/rename/delete on it are
   // no-ops (and the UI never offers them).
@@ -67,7 +97,7 @@ function logStartupAudit(items: Item[], baselineEscalated: number): void {
   /* eslint-disable no-console */
   console.log(
     '%c[Moda Optioneering] startup audit',
-    'color:#005D2F;font-weight:700',
+    `color:${TOKEN.accent};font-weight:700`,
   )
   console.table(byPhase)
   const baseTotal = BASELINE_TOTALS.baseTotal
@@ -83,7 +113,7 @@ function logStartupAudit(items: Item[], baselineEscalated: number): void {
   const target = baselineEscalated >= 402e6 && baselineEscalated <= 405.5e6
   console.log(
     `%cValidation: escalated total ${target ? 'WITHIN' : 'OUTSIDE'} $402-405.5M target`,
-    `color:${target ? '#005D2F' : '#D83C31'};font-weight:700`,
+    `color:${target ? TOKEN.accent : TOKEN.alert};font-weight:700`,
   )
   /* eslint-enable no-console */
 
@@ -105,6 +135,8 @@ const persisted = loadPersisted()
 const initialItems = persisted ? applySnapshot(SEEDED_ITEMS, persisted.working) : SEEDED_ITEMS
 const initialRates = persisted ? { ...persisted.working.rates } : { ...DEFAULT_RATES }
 
+const clamp01 = (v: number): number => Math.min(1, Math.max(0, v))
+
 const findScenario = (scenarios: Scenario[], id: string): Scenario | undefined =>
   id === BASELINE_ID ? BASELINE_SCENARIO : scenarios.find((s) => s.id === id)
 
@@ -114,6 +146,14 @@ export const useStore = create<AppState>((set) => ({
   scenarios: persisted?.scenarios ?? [],
   activeScenarioId: persisted?.activeScenarioId ?? BASELINE_ID,
   compareScenarioId: persisted?.compareScenarioId ?? null,
+  fundingLens: false,
+  fundingOverrides: persisted?.fundingOverrides ?? {},
+  laborFractions: persisted?.laborFractions ?? { ...LABOR_FRACTION_DEFAULTS },
+  laborGlobals: persisted?.laborGlobals ?? { ...GLOBAL_DEFAULTS },
+  participation: persisted?.participation ?? {
+    ...PARTICIPATION_DEFAULTS,
+    tradePct: { ...PARTICIPATION_DEFAULTS.tradePct },
+  },
 
   setRate: (year, rate) =>
     set((state) => ({ rates: { ...state.rates, [year]: rate } })),
@@ -151,6 +191,57 @@ export const useStore = create<AppState>((set) => ({
         it.id === id ? { ...it, alloc: rebalanceAlloc(it.alloc, year, value) } : it,
       ),
     })),
+
+  setFundingLens: (on) => set({ fundingLens: on }),
+
+  // Setting an item back to its derived default removes the key — "reset to
+  // derived" is free and the persisted payload only carries real departures.
+  setFundingClass: (id, cls) =>
+    set((state) => {
+      const next = { ...state.fundingOverrides }
+      if (cls === FUNDING_DEFAULT_BY_ID[id]) delete next[id]
+      else next[id] = cls
+      return { fundingOverrides: next }
+    }),
+
+  // ── Labor + participation planning assumptions ───────────────────────────
+
+  setLaborFraction: (trade, v) =>
+    set((state) => ({
+      laborFractions: { ...state.laborFractions, [trade]: clamp01(v) },
+    })),
+
+  setLaborGlobal: (k, v) =>
+    set((state) => ({
+      laborGlobals: { ...state.laborGlobals, [k]: Math.max(0, v) },
+    })),
+
+  resetLaborAssumptions: () =>
+    set({
+      laborFractions: { ...LABOR_FRACTION_DEFAULTS },
+      laborGlobals: { ...GLOBAL_DEFAULTS },
+    }),
+
+  setTradeParticipationPct: (trade, v) =>
+    set((state) => ({
+      participation: {
+        ...state.participation,
+        tradePct: { ...state.participation.tradePct, [trade]: clamp01(v) },
+      },
+    })),
+
+  setParticipationGlobal: (k, v) =>
+    set((state) => ({
+      participation: { ...state.participation, [k]: clamp01(v) },
+    })),
+
+  resetParticipation: () =>
+    set({
+      participation: {
+        ...PARTICIPATION_DEFAULTS,
+        tradePct: { ...PARTICIPATION_DEFAULTS.tradePct },
+      },
+    }),
 
   // ── Scenarios ────────────────────────────────────────────────────────────
 
@@ -247,6 +338,10 @@ useStore.subscribe((state) => {
       compareScenarioId: state.compareScenarioId,
       scenarios: state.scenarios,
       working: snapshotFrom(state.items, state.rates),
+      fundingOverrides: state.fundingOverrides,
+      laborFractions: state.laborFractions,
+      laborGlobals: state.laborGlobals,
+      participation: state.participation,
     })
   }, 300)
 })

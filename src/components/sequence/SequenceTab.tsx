@@ -54,14 +54,14 @@ function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode
     { id: 'plan', label: '2D Plan' },
   ]
   return (
-    <div className="flex shrink-0 overflow-hidden rounded-md border border-pcl-light">
+    <div className="flex shrink-0 overflow-hidden rounded-md border border-line">
       {opts.map((o) => (
         <button
           key={o.id}
           type="button"
           onClick={() => onChange(o.id)}
           className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
-            view === o.id ? 'bg-pcl-green text-white' : 'bg-white text-pcl-mid hover:text-pcl-dark'
+            view === o.id ? 'bg-accent text-white' : 'bg-white text-ink-muted hover:text-ink'
           }`}
         >
           {o.label}
@@ -267,7 +267,7 @@ export default function SequenceTab() {
             With the panel collapsed the section takes the full row and the
             compact window card floats over the canvas top-right. */}
         <section
-          className="relative min-w-0 flex-1 rounded-lg border border-pcl-light bg-white p-3"
+          className="relative min-w-0 flex-1 rounded-lg border border-line bg-white p-3"
           onPointerDownCapture={() => {
             if (playing) pause()
           }}
@@ -275,7 +275,7 @@ export default function SequenceTab() {
           {view === 'stack' ? <StackView {...viewProps} /> : <PlanView {...viewProps} />}
           {/* Synced cumulative S-curve — directly beneath the visual so it is
               always in view at 1080p (both svgs are height-capped). */}
-          <div className="mt-1 border-t border-pcl-light/60 pt-2">
+          <div className="mt-1 border-t border-line/60 pt-2">
             <CashFlowStrip
               totals={totals}
               selectedIdx={selectedIdx}
@@ -284,7 +284,7 @@ export default function SequenceTab() {
               onHover={onHover}
             />
           </div>
-          <p className="mt-2 text-[10px] font-light italic text-pcl-mid">{SCHEMATIC_FOOTNOTE}</p>
+          <p className="mt-2 text-[10px] font-light italic text-ink-muted">{SCHEMATIC_FOOTNOTE}</p>
           {collapsed && (
             <CollapsedWindowCard
               stats={stats}

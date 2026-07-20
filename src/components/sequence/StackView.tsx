@@ -15,6 +15,7 @@ import CalloutLayer from './Callouts'
 import { SystemsTip } from './SequenceTooltip'
 import type { HoverHandler } from './SequenceTooltip'
 import type { CalloutSpec } from './viewTypes'
+import { color as C, seq as SEQ } from '../../lib/tokens'
 
 const W = 960
 const H = 900
@@ -151,15 +152,15 @@ export default function StackView({
           return (
             <g key={lvl}>
               {/* Side wall, then plate surface. */}
-              <path d={wallPath(project)} fill="#cfd2cf" />
-              <path d={ellipsePath(1.0, project)} fill="#fbfbfa" stroke="#c9ccc9" strokeWidth={1} />
+              <path d={wallPath(project)} fill={SEQ.structure.wall} />
+              <path d={ellipsePath(1.0, project)} fill={SEQ.structure.plateTop} stroke={SEQ.structure.hairline} strokeWidth={1} />
 
               {/* The level's ring band + geometry on the plate surface. */}
               {ring && (
                 <path
                   d={ellipsePath(ring.inner, project)}
                   fill="none"
-                  stroke="#e4e6e3"
+                  stroke={SEQ.structure.inner}
                   strokeWidth={0.8}
                 />
               )}
@@ -178,7 +179,7 @@ export default function StackView({
                 <path
                   d={ellipsePath(ring.outer, project)}
                   fill="none"
-                  stroke="#d5d7d4"
+                  stroke={SEQ.structure.slab}
                   strokeWidth={0.8}
                 />
               )}
@@ -192,8 +193,8 @@ export default function StackView({
                     width={0.2 * S}
                     height={0.304 * S * SQUASH}
                     rx={5}
-                    fill="#f7f6f2"
-                    stroke="#b9bcb8"
+                    fill={SEQ.structure.court}
+                    stroke={SEQ.structure.courtStroke}
                     strokeWidth={1}
                   />
                   <line
@@ -201,13 +202,13 @@ export default function StackView({
                     y1={cy}
                     x2={CX + 0.1 * S}
                     y2={cy}
-                    stroke="#c9ccc9"
+                    stroke={SEQ.structure.hairline}
                     strokeWidth={0.8}
                   />
                   <path
                     d={ellipsePath(COURT_R, project)}
                     fill="none"
-                    stroke="#e2e4e1"
+                    stroke={SEQ.structure.faint}
                     strokeWidth={0.6}
                   />
                 </g>
@@ -224,7 +225,7 @@ export default function StackView({
                   y1={cy}
                   x2={CX - S + 4}
                   y2={cy}
-                  stroke="#c9ccc9"
+                  stroke={SEQ.structure.hairline}
                   strokeWidth={0.8}
                   strokeDasharray="2 3"
                 />
@@ -237,7 +238,7 @@ export default function StackView({
                     height={9}
                     rx={1.5}
                     style={{ fill: stripCellFill(v, wi, selectedIdx), transition: 'fill 600ms ease' }}
-                    stroke={selectedIdx === wi ? '#36383D' : '#d5d7d4'}
+                    stroke={selectedIdx === wi ? C.ink : SEQ.structure.slab}
                     strokeWidth={selectedIdx === wi ? 1.4 : 0.6}
                     onMouseEnter={(e) =>
                       onHover(
@@ -284,8 +285,8 @@ export default function StackView({
       {/* One shared N arrow beside the stack — north is the top-back of every
           plate. */}
       <g pointerEvents="none">
-        <path d={`M ${CX - S - 40} 60 l 5 14 l -5 -4 l -5 4 Z`} fill="#36383D" />
-        <text x={CX - S - 28} y={73} fontSize={12} fontWeight={700} fill="#36383D">
+        <path d={`M ${CX - S - 40} 60 l 5 14 l -5 -4 l -5 4 Z`} fill={C.ink} />
+        <text x={CX - S - 28} y={73} fontSize={12} fontWeight={700} fill={C.ink}>
           N
         </text>
       </g>

@@ -11,8 +11,9 @@ import {
 import type { Totals } from '../../lib/escalation'
 import { KIND_COLORS, spendByWindow } from '../../lib/analytics'
 import { fmtMillions } from '../../lib/format'
+import { chart as CH, color as C } from '../../lib/tokens'
 
-const axisTick = { fontSize: 11, fill: '#A6A6A6' }
+const axisTick = { fontSize: 11, fill: C.inkMuted }
 const fmtAxis = (v: number) => `$${Math.round(v / 1e6)}M`
 
 export default function SpendByWindowChart({ totals }: { totals: Totals }) {
@@ -20,18 +21,18 @@ export default function SpendByWindowChart({ totals }: { totals: Totals }) {
   const total = data.reduce((s, d) => s + d.amount, 0)
 
   return (
-    <section className="rounded-lg border border-pcl-light bg-white p-4">
+    <section className="rounded-lg border border-line bg-white p-4">
       <div className="mb-1 flex items-baseline justify-between">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-pcl-green">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
           Spend by Window
         </h3>
-        <span className="text-xs font-medium tabular-nums text-pcl-dark">
+        <span className="text-xs font-medium tabular-nums text-ink">
           {fmtMillions(total)} total
         </span>
       </div>
 
       {/* Season legend — same colors as the S-curve bands. */}
-      <div className="mb-3 flex flex-wrap gap-3 text-[11px] font-medium text-pcl-dark">
+      <div className="mb-3 flex flex-wrap gap-3 text-[11px] font-medium text-ink">
         <span className="flex items-center gap-1.5">
           <span
             className="h-2.5 w-2.5 rounded-sm"
@@ -57,12 +58,12 @@ export default function SpendByWindowChart({ totals }: { totals: Totals }) {
             layout="vertical"
             margin={{ top: 4, right: 12, bottom: 4, left: 4 }}
           >
-            <CartesianGrid horizontal={false} stroke="#ececeb" />
+            <CartesianGrid horizontal={false} stroke={C.gridline} />
             <XAxis
               type="number"
               tickFormatter={fmtAxis}
               tick={axisTick}
-              axisLine={{ stroke: '#CFCFCF' }}
+              axisLine={{ stroke: C.line }}
               tickLine={false}
             />
             <YAxis
@@ -74,11 +75,11 @@ export default function SpendByWindowChart({ totals }: { totals: Totals }) {
               width={44}
             />
             <Tooltip
-              cursor={{ fill: 'rgba(0,93,47,0.06)' }}
+              cursor={{ fill: CH.cursorFill }}
               formatter={(value: number) => [fmtMillions(value), 'Escalated']}
               contentStyle={{
                 borderRadius: 8,
-                border: '1px solid #CFCFCF',
+                border: `1px solid ${C.line}`,
                 fontSize: 12,
               }}
             />

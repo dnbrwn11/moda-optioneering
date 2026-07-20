@@ -9,6 +9,7 @@ import { cashFlowCurve, KIND_COLORS } from '../../lib/analytics'
 import { fmtMillions } from '../../lib/format'
 import { SEQUENCE_WINDOWS } from '../../data/arenaGeometry'
 import type { HoverHandler } from './SequenceTooltip'
+import { color as C, seq as SEQ } from '../../lib/tokens'
 
 // Wide aspect so the strip stays short (~100px) at full panel width and the
 // visual above it never has to scroll at 1080p.
@@ -66,7 +67,7 @@ export default function CashFlowStrip({
             onHover(
               <div className="flex flex-col gap-0.5">
                 <span className="font-bold">{SEQUENCE_WINDOWS[i].label}</span>
-                <span className="text-pcl-mid">{SEQUENCE_WINDOWS[i].caption}</span>
+                <span className="text-ink-muted">{SEQUENCE_WINDOWS[i].caption}</span>
                 <span className="font-bold tabular-nums">
                   {fmtMillions(totals.phaseWithContinuous[SEQUENCE_WINDOWS[i].phase])}
                 </span>
@@ -91,7 +92,7 @@ export default function CashFlowStrip({
             textAnchor="middle"
             fontSize={12}
             fontWeight={selectedIdx === i ? 700 : 500}
-            fill={selectedIdx === i ? KIND_COLORS[b.kind] : '#A6A6A6'}
+            fill={selectedIdx === i ? KIND_COLORS[b.kind] : C.inkMuted}
           >
             {SEQUENCE_WINDOWS[i].label}
           </text>
@@ -99,16 +100,16 @@ export default function CashFlowStrip({
       ))}
 
       {/* Gridline at total + $ axis hints. */}
-      <line x1={PAD_L} y1={y(total)} x2={W - PAD_R} y2={y(total)} stroke="#e2e4e1" strokeDasharray="4 4" />
-      <text x={PAD_L - 6} y={y(total) + 4} textAnchor="end" fontSize={11} fill="#A6A6A6">
+      <line x1={PAD_L} y1={y(total)} x2={W - PAD_R} y2={y(total)} stroke={SEQ.structure.faint} strokeDasharray="4 4" />
+      <text x={PAD_L - 6} y={y(total) + 4} textAnchor="end" fontSize={11} fill={C.inkMuted}>
         {fmtMillions(total)}
       </text>
-      <text x={PAD_L - 6} y={y(0) + 4} textAnchor="end" fontSize={11} fill="#A6A6A6">
+      <text x={PAD_L - 6} y={y(0) + 4} textAnchor="end" fontSize={11} fill={C.inkMuted}>
         $0
       </text>
 
       {/* Full curve, muted; emphasized portion clipped to the playhead. */}
-      <path d={path} fill="none" stroke="#c4ccc7" strokeWidth={1.5} pointerEvents="none" />
+      <path d={path} fill="none" stroke={SEQ.structure.baselineCurve} strokeWidth={1.5} pointerEvents="none" />
       {playX !== null ? (
         <>
           <clipPath id={clipId}>
@@ -117,16 +118,16 @@ export default function CashFlowStrip({
           <path
             d={path}
             fill="none"
-            stroke="#005D2F"
+            stroke={C.accent}
             strokeWidth={2.5}
             clipPath={`url(#${clipId})`}
             pointerEvents="none"
           />
-          <line x1={playX} y1={PAD_T} x2={playX} y2={H - PAD_B} stroke="#36383D" strokeWidth={1.2} pointerEvents="none" />
-          <circle cx={playX} cy={PAD_T - 4} r={3} fill="#36383D" pointerEvents="none" />
+          <line x1={playX} y1={PAD_T} x2={playX} y2={H - PAD_B} stroke={C.ink} strokeWidth={1.2} pointerEvents="none" />
+          <circle cx={playX} cy={PAD_T - 4} r={3} fill={C.ink} pointerEvents="none" />
         </>
       ) : (
-        <path d={path} fill="none" stroke="#005D2F" strokeWidth={2} strokeOpacity={0.65} pointerEvents="none" />
+        <path d={path} fill="none" stroke={C.accent} strokeWidth={2} strokeOpacity={0.65} pointerEvents="none" />
       )}
     </svg>
   )

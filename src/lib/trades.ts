@@ -1,26 +1,12 @@
 import type { Item, LevelId, Trade } from '../types'
+import { tradeColors } from './tokens'
 
 // Per-trade accent colors — the scope card's left border + the board TRADE
-// filter chips. Muted, distinguishable hues; Interior Buildout is a neutral gray
-// (it dominates the discrete board) so specialty trades pop. PCL green stays
-// reserved for brand chrome, so it is deliberately absent here.
-export const TRADE_ACCENT: Record<Trade, string> = {
-  'Interior Buildout': '#8C9199', // neutral gray — blends
-  HVAC: '#3E6E9E', // blue
-  'Electrical & Low Voltage': '#C0902E', // gold
-  Plumbing: '#2E8C86', // teal
-  'Fire Protection': '#B0524A', // clay red (distinct from alert orange)
-  'Structural/Concrete Repair': '#6B5B95', // violet
-  'Bowl & Rigging': '#A85C86', // magenta
-  'Building Envelope': '#567C93', // steel
-  Sitework: '#7E7040', // khaki
-  'Vertical Transportation': '#9E6B4E', // brown
-  Seating: '#A85F6E', // rose
-  'Acoustical & Specialties': '#8E6BA6', // lavender
-  'Audio Visual': '#5566A0', // indigo
-  'Food Service Equipment': '#B8843B', // amber
-  'Aging Assets (Owner Decision)': '#A0A0A0', // gray — inert ($0)
-}
+// filter chips. Muted, distinguishable hues; Interior Buildout is a neutral
+// gray (it dominates the discrete board) so specialty trades pop. Values live
+// in the design-token authority (src/theme/tokens.json); brand accents stay
+// reserved for chrome, so they are deliberately absent here.
+export const TRADE_ACCENT: Record<Trade, string> = tradeColors as Record<Trade, string>
 
 // Short chip labels (full names are long); full name lives in a title attr.
 export const TRADE_SHORT: Record<Trade, string> = {

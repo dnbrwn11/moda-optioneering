@@ -8,9 +8,17 @@ import RoadmapTab from './components/RoadmapTab'
 import AnalyticsTab from './components/AnalyticsTab'
 import CapacityTab from './components/CapacityTab'
 import ResourcesTab from './components/ResourcesTab'
+import ParticipationTab from './components/ParticipationTab'
 import PrintReport from './components/PrintReport'
 
-type Tab = 'phasing' | 'sequence' | 'roadmap' | 'analytics' | 'capacity' | 'resources'
+type Tab =
+  | 'phasing'
+  | 'sequence'
+  | 'roadmap'
+  | 'analytics'
+  | 'capacity'
+  | 'resources'
+  | 'participation'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'phasing', label: 'Phasing' },
@@ -19,11 +27,12 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'analytics', label: 'Analytics' },
   { id: 'capacity', label: 'Capacity' },
   { id: 'resources', label: 'Resources' },
+  { id: 'participation', label: 'Participation' },
 ]
 
 function TabBar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
   return (
-    <div className="flex shrink-0 gap-1 border-b border-pcl-light bg-white px-6 pt-2">
+    <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-line bg-white px-6 pt-2">
       {TABS.map((t) => {
         const active = t.id === tab
         return (
@@ -35,8 +44,8 @@ function TabBar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
             onClick={() => onChange(t.id)}
             className={`-mb-px border-b-2 px-4 py-2 text-sm font-bold uppercase tracking-wider transition-colors ${
               active
-                ? 'border-pcl-green text-pcl-green'
-                : 'border-transparent text-pcl-mid hover:text-pcl-dark'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-ink-muted hover:text-ink'
             }`}
           >
             {t.label}
@@ -75,8 +84,10 @@ export default function App() {
             <AnalyticsTab />
           ) : tab === 'capacity' ? (
             <CapacityTab />
-          ) : (
+          ) : tab === 'resources' ? (
             <ResourcesTab />
+          ) : (
+            <ParticipationTab />
           )}
         </main>
       </div>

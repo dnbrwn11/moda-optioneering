@@ -54,27 +54,27 @@ export default function ContinuousSection({
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
       className={`mx-6 mb-6 mt-4 rounded-lg border bg-white transition-colors ${
-        dragOver ? 'border-pcl-green bg-pcl-green/5' : 'border-pcl-light'
+        dragOver ? 'border-accent bg-accent/5' : 'border-line'
       }`}
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-pcl-light px-4 py-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-line px-4 py-3">
         <div>
-          <h2 className="text-sm font-bold text-pcl-dark">
+          <h2 className="text-sm font-bold text-ink">
             Continuous / Systems Work
-            <span className="ml-2 font-light text-pcl-mid">
+            <span className="ml-2 font-light text-ink-muted">
               — spread across construction
             </span>
           </h2>
-          <p className="text-[11px] font-light text-pcl-mid">
+          <p className="text-[11px] font-light text-ink-muted">
             {contItems.length} items · base split across 2027–2029 per item (sum
             100%)
           </p>
         </div>
         <div className="text-right">
-          <div className="text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+          <div className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
             Section escalated subtotal
           </div>
-          <div className="text-xl font-bold tabular-nums text-pcl-green">
+          <div className="text-xl font-bold tabular-nums text-accent">
             {fmtMillions(subtotal)}
           </div>
         </div>
@@ -82,7 +82,7 @@ export default function ContinuousSection({
 
       <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
         {visibleItems.length === 0 ? (
-          <div className="col-span-full flex items-center justify-center rounded-md border-[1.5px] border-dashed border-pcl-light px-3 py-6 text-center text-[11px] font-light text-pcl-mid">
+          <div className="col-span-full flex items-center justify-center rounded-md border-[1.5px] border-dashed border-line px-3 py-6 text-center text-[11px] font-light text-ink-muted">
             No items match filters
           </div>
         ) : (

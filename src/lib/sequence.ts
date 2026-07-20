@@ -18,6 +18,7 @@ import {
   PLAN_LEVELS,
   SEQUENCE_WINDOWS,
 } from '../data/arenaGeometry'
+import { color, ramp as tokenRamp, seq as seqTokens } from './tokens'
 import type {
   ItemGeometry,
   PlanLevelId,
@@ -279,11 +280,21 @@ export function computeWindowStats(
 
 // ── Shading ────────────────────────────────────────────────────────────────
 // Three-state language when a window is selected: prior windows flat neutral
-// gray ("done"), the selected window ramps white → deep PCL green by escalated
-// spend (share of the window's largest discrete item), later windows near-white
-// with a faint outline. No selection (ALL view) keeps every wedge white.
-const PCL_GREEN: [number, number, number] = [0, 93, 47]
-const DONE_GRAY: [number, number, number] = [96, 100, 97]
+// gray ("done"), the selected window ramps white → the intensity-ramp maximum
+// by escalated spend (share of the window's largest discrete item), later
+// windows near-white with a faint outline. No selection (ALL view) keeps
+// every wedge white. All colors come from the design-token authority.
+function hexToRgbTuple(hex: string): [number, number, number] {
+  const h = hex.replace('#', '')
+  return [
+    parseInt(h.slice(0, 2), 16),
+    parseInt(h.slice(2, 4), 16),
+    parseInt(h.slice(4, 6), 16),
+  ]
+}
+
+const RAMP_MAX = hexToRgbTuple(tokenRamp[tokenRamp.length - 1])
+const DONE_RAMP_TARGET = hexToRgbTuple(seqTokens.doneRampTarget)
 
 function ramp(target: [number, number, number], t: number): string {
   const k = Math.max(0, Math.min(1, t))
@@ -291,23 +302,25 @@ function ramp(target: [number, number, number], t: number): string {
   return `rgb(${c[0]}, ${c[1]}, ${c[2]})`
 }
 
-export function greenScale(t: number): string {
-  return ramp(PCL_GREEN, t)
+// Magnitude intensity: white → ramp maximum (the wedge/strip shading scale).
+export function rampScale(t: number): string {
+  return ramp(RAMP_MAX, t)
 }
 
 export function grayScale(t: number): string {
-  return ramp(DONE_GRAY, t)
+  return ramp(DONE_RAMP_TARGET, t)
 }
 
 // Flat "completed" wedge fill — no intensity ramp; done work all reads alike.
-export const COMPLETED_GRAY = '#B8BDB9'
+export const COMPLETED_GRAY = seqTokens.done
 // Near-white "not yet" fill for future windows of the selected sequence.
-export const FUTURE_FILL = '#fcfcfb'
+export const FUTURE_FILL = seqTokens.future
+const FUTURE_STROKE_OPACITY = seqTokens.futureStrokeOpacity
 
-// Building Systems (continuous) accent — muted gold (desaturated PCL-yellow
-// family), clearly distinct from the green intensity ramp. Used for the 2D
-// halo band, the 3D spine prism and their captions.
-export const SYSTEMS_GOLD = '#C9A227'
+// Building Systems (continuous) accent — muted gold, clearly distinct from
+// the intensity ramp. Used for the 2D halo band, the 3D spine prism and
+// their captions.
+export const SYSTEMS_GOLD = color.gold
 
 export type ShadeState = 'excluded' | 'future' | 'completed' | 'active'
 
@@ -337,35 +350,35 @@ export function computeShades(
   for (const it of items) {
     if (!(it.id in GEOMETRY_BY_ID)) continue
     if (!it.included) {
-      shades.set(it.id, { state: 'excluded', fill: '#eceeed', strokeOpacity: 1, intensity: 0, spend: 0 })
+      shades.set(it.id, { state: 'excluded', fill: seqTokens.excluded, strokeOpacity: 1, intensity: 0, spend: 0 })
       continue
     }
     if (!selected) {
-      shades.set(it.id, { state: 'future', fill: '#ffffff', strokeOpacity: 1, intensity: 0, spend: 0 })
+      shades.set(it.id, { state: 'future', fill: color.surface, strokeOpacity: 1, intensity: 0, spend: 0 })
       continue
     }
     const spend = itemWindowSpend(it, rates, selected.phase)
     if (spend > 0) {
       const share = maxSpend > 0 ? spend / maxSpend : 1
       const t = 0.45 + 0.55 * share
-      shades.set(it.id, { state: 'active', fill: greenScale(t), strokeOpacity: 1, intensity: share, spend })
+      shades.set(it.id, { state: 'active', fill: rampScale(t), strokeOpacity: 1, intensity: share, spend })
     } else if (windowIndex(it.phase) < selected.index) {
       shades.set(it.id, { state: 'completed', fill: COMPLETED_GRAY, strokeOpacity: 0.55, intensity: 0, spend: 0 })
     } else {
-      shades.set(it.id, { state: 'future', fill: FUTURE_FILL, strokeOpacity: 0.3, intensity: 0, spend: 0 })
+      shades.set(it.id, { state: 'future', fill: FUTURE_FILL, strokeOpacity: FUTURE_STROKE_OPACITY, intensity: 0, spend: 0 })
     }
   }
   return shades
 }
 
 // Mini-strip cell fill under the same three-state language: past windows keep
-// their intensity but in gray, the selected window keeps the green ramp,
-// future windows fade to a faint hint. No selection → all-windows green.
+// their intensity but in gray, the selected window keeps the intensity ramp,
+// future windows fade to a faint hint. No selection → all-windows ramped.
 export function stripCellFill(v: number, wi: number, selectedIdx: number | null): string {
   const t = 0.06 + 0.9 * v
-  if (selectedIdx === null || wi === selectedIdx) return greenScale(t)
+  if (selectedIdx === null || wi === selectedIdx) return rampScale(t)
   if (wi < selectedIdx) return grayScale(t)
-  return greenScale(t * 0.22)
+  return rampScale(t * 0.22)
 }
 
 // CONT wash intensity per window: that window's folded CONT spend relative to

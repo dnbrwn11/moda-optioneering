@@ -3,8 +3,10 @@ import { useStore } from '../store'
 import { LEVEL_ACCENT, LEVEL_ORDER, levelChipStyle } from '../lib/levels'
 import { TRADE_ACCENT, TRADE_ORDER, TRADE_SHORT, tradeChipStyle } from '../lib/trades'
 import type { LevelId, Trade } from '../types'
+import { FUNDING_CAPTION, FUNDING_CLASSES, FUNDING_META, fundingChipStyle } from '../lib/funding'
 import Board from './Board'
 import ContinuousSection from './ContinuousSection'
+import Switch from './Switch'
 
 type Density = 'detailed' | 'compact'
 
@@ -17,7 +19,7 @@ function Grip() {
     <svg
       viewBox="0 0 8 12"
       aria-hidden
-      className="h-3.5 w-2.5 shrink-0 text-pcl-green"
+      className="h-3.5 w-2.5 shrink-0 text-accent"
       fill="currentColor"
     >
       <circle cx="2" cy="2" r="1" />
@@ -30,42 +32,10 @@ function Grip() {
   )
 }
 
-// On/off switch (view-only chrome).
-function Switch({
-  on,
-  onChange,
-  label,
-}: {
-  on: boolean
-  onChange: (v: boolean) => void
-  label: string
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={() => onChange(!on)}
-      className="flex items-center gap-2 text-xs font-medium text-pcl-dark"
-    >
-      <span className="uppercase tracking-wider text-pcl-mid">{label}</span>
-      <span
-        className={`relative h-4 w-7 rounded-full transition-colors ${
-          on ? 'bg-pcl-green' : 'bg-pcl-light'
-        }`}
-      >
-        <span
-          className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${
-            on ? 'left-0.5 translate-x-3' : 'left-0.5'
-          }`}
-        />
-      </span>
-    </button>
-  )
-}
-
 export default function PhasingTab() {
   const items = useStore((s) => s.items)
+  const fundingLens = useStore((s) => s.fundingLens)
+  const setFundingLens = useStore((s) => s.setFundingLens)
   const [density, setDensity] = useState<Density>('compact')
   const [scopeToggles, setScopeToggles] = useState(false)
   const [activeLevels, setActiveLevels] = useState<Set<LevelId>>(new Set())
@@ -114,19 +84,19 @@ export default function PhasingTab() {
             onClick={() => setHintDismissed(false)}
             title={HINT_TEXT}
             aria-label="Show board tip"
-            className="flex h-6 w-6 items-center justify-center rounded-full border border-pcl-light text-pcl-mid transition-colors hover:border-pcl-green hover:text-pcl-green"
+            className="flex h-6 w-6 items-center justify-center rounded-full border border-line text-ink-muted transition-colors hover:border-accent hover:text-accent"
           >
             <span className="text-xs font-bold italic">i</span>
           </button>
         ) : (
-          <div className="flex items-center gap-2 rounded-md border border-l-4 border-[#cfe3d6] border-l-pcl-green bg-[#f0f7f2] px-3 py-2 text-[13px] text-pcl-dark">
+          <div className="flex items-center gap-2 rounded-md border border-l-4 border-hint-border border-l-accent bg-accent-tint px-3 py-2 text-[13px] text-ink">
             <Grip />
             <span className="flex-1">{HINT_TEXT}</span>
             <button
               type="button"
               onClick={() => setHintDismissed(true)}
               aria-label="Dismiss tip"
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-pcl-mid transition-colors hover:bg-black/[0.05] hover:text-pcl-dark"
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-ink-muted transition-colors hover:bg-black/[0.05] hover:text-ink"
             >
               <svg viewBox="0 0 12 12" aria-hidden className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <path d="M3 3l6 6M9 3l-6 6" />
@@ -141,7 +111,7 @@ export default function PhasingTab() {
         <div className="flex flex-col gap-2">
           {/* LEVEL chips */}
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="mr-1 w-10 text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+            <span className="mr-1 w-10 text-[11px] font-medium uppercase tracking-wider text-ink-muted">
               Level
             </span>
             <button
@@ -150,8 +120,8 @@ export default function PhasingTab() {
               aria-pressed={activeLevels.size === 0}
               className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors ${
                 activeLevels.size === 0
-                  ? 'border-pcl-green bg-pcl-green text-white'
-                  : 'border-pcl-light text-pcl-mid hover:text-pcl-dark'
+                  ? 'border-accent bg-accent text-white'
+                  : 'border-line text-ink-muted hover:text-ink'
               }`}
             >
               ALL
@@ -176,7 +146,7 @@ export default function PhasingTab() {
 
           {/* TRADE chips */}
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="mr-1 w-10 text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+            <span className="mr-1 w-10 text-[11px] font-medium uppercase tracking-wider text-ink-muted">
               Trade
             </span>
             <button
@@ -185,8 +155,8 @@ export default function PhasingTab() {
               aria-pressed={activeTrades.size === 0}
               className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors ${
                 activeTrades.size === 0
-                  ? 'border-pcl-green bg-pcl-green text-white'
-                  : 'border-pcl-light text-pcl-mid hover:text-pcl-dark'
+                  ? 'border-accent bg-accent text-white'
+                  : 'border-line text-ink-muted hover:text-ink'
               }`}
             >
               ALL
@@ -212,9 +182,9 @@ export default function PhasingTab() {
               <button
                 type="button"
                 onClick={clearAll}
-                className="ml-1 flex items-center gap-1 rounded-full bg-pcl-green/10 px-2.5 py-0.5 text-[11px] font-medium text-pcl-green transition-colors hover:bg-pcl-green/20"
+                className="ml-1 flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-0.5 text-[11px] font-medium text-accent transition-colors hover:bg-accent/20"
               >
-                <span className="h-1.5 w-1.5 rounded-full bg-pcl-green" aria-hidden />
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
                 Filtered view · clear
               </button>
             )}
@@ -223,8 +193,9 @@ export default function PhasingTab() {
 
         {/* View toggles */}
         <div className="flex shrink-0 items-center gap-4">
+          <Switch label="Funding lens" on={fundingLens} onChange={setFundingLens} />
           <Switch label="Scope toggles" on={scopeToggles} onChange={setScopeToggles} />
-          <div className="inline-flex rounded border border-pcl-light p-0.5">
+          <div className="inline-flex rounded border border-line p-0.5">
             {(['detailed', 'compact'] as const).map((d) => (
               <button
                 key={d}
@@ -233,8 +204,8 @@ export default function PhasingTab() {
                 aria-pressed={density === d}
                 className={`rounded px-3 py-1 text-xs font-medium capitalize transition-colors ${
                   density === d
-                    ? 'bg-pcl-green text-white'
-                    : 'text-pcl-mid hover:text-pcl-dark'
+                    ? 'bg-accent text-white'
+                    : 'text-ink-muted hover:text-ink'
                 }`}
               >
                 {d}
@@ -243,6 +214,28 @@ export default function PhasingTab() {
           </div>
         </div>
       </div>
+
+      {/* Funding lens legend — cards recolor by funding class while active. */}
+      {fundingLens && (
+        <div className="flex flex-wrap items-center gap-2 px-6 pt-3">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
+            Funding
+          </span>
+          {FUNDING_CLASSES.map((cls) => (
+            <span
+              key={cls}
+              title={FUNDING_META[cls].label}
+              className="rounded-full border px-2.5 py-0.5 text-[11px] font-medium"
+              style={fundingChipStyle(cls)}
+            >
+              {FUNDING_META[cls].short} · {FUNDING_META[cls].label}
+            </span>
+          ))}
+          <span className="text-[10px] font-light italic text-ink-muted">
+            {FUNDING_CAPTION}
+          </span>
+        </div>
+      )}
 
       <Board
         compact={density === 'compact'}

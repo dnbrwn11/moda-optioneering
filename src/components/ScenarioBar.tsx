@@ -29,7 +29,7 @@ function Switch({
       disabled={disabled}
       onClick={onToggle}
       className={`relative h-4 w-7 shrink-0 rounded-full transition-colors ${
-        on ? 'bg-pcl-green' : 'bg-pcl-light'
+        on ? 'bg-accent' : 'bg-line'
       } ${disabled ? 'cursor-default opacity-50' : 'cursor-pointer'}`}
     >
       <span
@@ -42,9 +42,9 @@ function Switch({
 }
 
 const MENU_BTN =
-  'rounded border border-pcl-light px-2 py-1 text-[11px] font-medium text-pcl-dark hover:bg-black/[0.04]'
+  'rounded border border-line px-2 py-1 text-[11px] font-medium text-ink hover:bg-black/[0.04]'
 const PRIMARY_BTN =
-  'rounded bg-pcl-green px-2 py-1 text-[11px] font-medium text-white hover:opacity-90'
+  'rounded bg-accent px-2 py-1 text-[11px] font-medium text-white hover:opacity-90'
 
 export default function ScenarioBar() {
   const scenarios = useStore((s) => s.scenarios)
@@ -111,8 +111,8 @@ export default function ScenarioBar() {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-pcl-light bg-white px-6 py-1.5">
-      <span className="text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-line bg-white px-6 py-1.5">
+      <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
         Scenario
       </span>
 
@@ -123,12 +123,12 @@ export default function ScenarioBar() {
           onClick={() => (menuOpen ? closeMenu() : setMenuOpen(true))}
           aria-expanded={menuOpen}
           aria-label="Switch scenario"
-          className="flex items-center gap-1.5 rounded-full border border-pcl-green/40 bg-pcl-green/10 px-3 py-1 text-xs font-bold text-pcl-green hover:bg-pcl-green/15"
+          className="flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-bold text-accent hover:bg-accent/15"
         >
           <span className="max-w-[180px] truncate">{active.name}</span>
           {modified && (
             <span
-              className="h-1.5 w-1.5 shrink-0 rounded-full bg-pcl-yellow"
+              className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-yellow"
               title="Unsaved changes"
               aria-label="Unsaved changes"
             />
@@ -150,10 +150,10 @@ export default function ScenarioBar() {
         {menuOpen && (
           <>
             <div className="fixed inset-0 z-40" aria-hidden onClick={closeMenu} />
-            <div className="absolute left-0 top-full z-50 mt-2 w-[300px] rounded-lg border border-pcl-light bg-white p-2 shadow-xl">
+            <div className="absolute left-0 top-full z-50 mt-2 w-[300px] rounded-lg border border-line bg-white p-2 shadow-xl">
               {pendingActivateId ? (
                 <div className="flex flex-col gap-2 p-1">
-                  <p className="text-xs font-medium leading-snug text-pcl-dark">
+                  <p className="text-xs font-medium leading-snug text-ink">
                     Unsaved changes on “{active.name}” will be lost. Switch anyway?
                   </p>
                   <div className="flex justify-end gap-2">
@@ -194,7 +194,7 @@ export default function ScenarioBar() {
                               if (e.key === 'Escape') setRenamingId(null)
                             }}
                             aria-label={`Rename ${s.name}`}
-                            className="min-w-0 flex-1 rounded border border-pcl-green px-2 py-1 text-xs text-pcl-dark outline-none"
+                            className="min-w-0 flex-1 rounded border border-accent px-2 py-1 text-xs text-ink outline-none"
                           />
                           <button type="button" onClick={commitRename} className={PRIMARY_BTN}>
                             Save
@@ -212,7 +212,7 @@ export default function ScenarioBar() {
                     if (confirmDeleteId === s.id) {
                       return (
                         <div key={s.id} className="flex items-center gap-1.5 px-1 py-1">
-                          <span className="min-w-0 flex-1 truncate text-xs font-medium text-pcl-dark">
+                          <span className="min-w-0 flex-1 truncate text-xs font-medium text-ink">
                             Delete “{s.name}”?
                           </span>
                           <button
@@ -221,7 +221,7 @@ export default function ScenarioBar() {
                               deleteScenario(s.id)
                               setConfirmDeleteId(null)
                             }}
-                            className="rounded bg-pcl-orange px-2 py-1 text-[11px] font-medium text-white hover:opacity-90"
+                            className="rounded bg-alert px-2 py-1 text-[11px] font-medium text-white hover:opacity-90"
                           >
                             Delete
                           </button>
@@ -247,17 +247,17 @@ export default function ScenarioBar() {
                         >
                           <span
                             className={`min-w-0 truncate text-xs ${
-                              isActive ? 'font-bold text-pcl-green' : 'font-medium text-pcl-dark'
+                              isActive ? 'font-bold text-brand-indigo' : 'font-medium text-ink'
                             }`}
                           >
                             {s.name}
                           </span>
                           {isActive && (
-                            <span className="shrink-0 text-[10px] font-bold text-pcl-green">✓</span>
+                            <span className="shrink-0 text-[10px] font-bold text-accent">✓</span>
                           )}
                         </button>
                         {isBaseline ? (
-                          <span className="shrink-0 rounded bg-black/[0.04] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-pcl-mid">
+                          <span className="shrink-0 rounded bg-black/[0.04] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-ink-muted">
                             permanent
                           </span>
                         ) : (
@@ -270,7 +270,7 @@ export default function ScenarioBar() {
                               }}
                               aria-label={`Rename ${s.name}`}
                               title="Rename"
-                              className="rounded px-1 text-xs text-pcl-mid hover:text-pcl-dark"
+                              className="rounded px-1 text-xs text-ink-muted hover:text-ink"
                             >
                               ✎
                             </button>
@@ -279,7 +279,7 @@ export default function ScenarioBar() {
                               onClick={() => setConfirmDeleteId(s.id)}
                               aria-label={`Delete ${s.name}`}
                               title="Delete"
-                              className="rounded px-1 text-xs text-pcl-mid hover:text-pcl-orange"
+                              className="rounded px-1 text-xs text-ink-muted hover:text-alert"
                             >
                               ✕
                             </button>
@@ -288,7 +288,7 @@ export default function ScenarioBar() {
                       </div>
                     )
                   })}
-                  <p className="mt-1 border-t border-pcl-light/60 px-1 pt-1.5 text-[10px] font-light text-pcl-mid">
+                  <p className="mt-1 border-t border-line/60 px-1 pt-1.5 text-[10px] font-light text-ink-muted">
                     {scenarios.length}/{MAX_USER_SCENARIOS} saved · Baseline is the shipped
                     source-reconciled state
                   </p>
@@ -320,7 +320,7 @@ export default function ScenarioBar() {
               if (e.key === 'Escape') setSavingAs(false)
             }}
             aria-label="New scenario name"
-            className="w-44 rounded border border-pcl-green px-2 py-1 text-xs text-pcl-dark outline-none"
+            className="w-44 rounded border border-accent px-2 py-1 text-xs text-ink outline-none"
           />
           <button
             type="button"
@@ -341,12 +341,12 @@ export default function ScenarioBar() {
             onClick={() => setSavingAs(true)}
             disabled={atCap}
             title={atCap ? `Scenario limit reached (${MAX_USER_SCENARIOS})` : 'Save current state as a new scenario'}
-            className={`${MENU_BTN} disabled:cursor-default disabled:text-pcl-mid disabled:hover:bg-transparent`}
+            className={`${MENU_BTN} disabled:cursor-default disabled:text-ink-muted disabled:hover:bg-transparent`}
           >
             Save as…
           </button>
           {atCap && (
-            <span className="text-[10px] font-light italic text-pcl-mid">
+            <span className="text-[10px] font-light italic text-ink-muted">
               scenario limit reached ({scenarios.length}/{MAX_USER_SCENARIOS})
             </span>
           )}
@@ -368,8 +368,8 @@ export default function ScenarioBar() {
           onBlur={() => setDiscardArmed(false)}
           className={`rounded px-2 py-1 text-[11px] font-medium ${
             discardArmed
-              ? 'bg-pcl-orange text-white'
-              : 'text-pcl-mid underline-offset-2 hover:text-pcl-dark hover:underline'
+              ? 'bg-alert text-white'
+              : 'text-ink-muted underline-offset-2 hover:text-ink hover:underline'
           }`}
         >
           {discardArmed ? 'Discard edits?' : 'Discard'}
@@ -378,7 +378,7 @@ export default function ScenarioBar() {
 
       {/* Compare toggle + target picker, right-aligned. */}
       <span className="ml-auto flex items-center gap-2">
-        <span className="text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+        <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
           Compare
         </span>
         <Switch
@@ -391,7 +391,7 @@ export default function ScenarioBar() {
           }}
         />
         {compareCandidates.length === 0 && (
-          <span className="text-[10px] font-light italic text-pcl-mid">
+          <span className="text-[10px] font-light italic text-ink-muted">
             save a scenario to compare
           </span>
         )}
@@ -402,7 +402,7 @@ export default function ScenarioBar() {
               onClick={() => setCompareOpen((o) => !o)}
               aria-expanded={compareOpen}
               aria-label="Choose comparison scenario"
-              className="flex items-center gap-1.5 rounded-full border border-pcl-indigo/40 bg-pcl-indigo/10 px-3 py-1 text-xs font-bold text-pcl-indigo hover:bg-pcl-indigo/15"
+              className="flex items-center gap-1.5 rounded-full border border-brand-indigo/40 bg-brand-indigo/10 px-3 py-1 text-xs font-bold text-brand-indigo hover:bg-brand-indigo/15"
             >
               <span className="max-w-[160px] truncate">vs {compare.name}</span>
               <svg
@@ -421,7 +421,7 @@ export default function ScenarioBar() {
             {compareOpen && (
               <>
                 <div className="fixed inset-0 z-40" aria-hidden onClick={() => setCompareOpen(false)} />
-                <div className="absolute right-0 top-full z-50 mt-2 w-[220px] rounded-lg border border-pcl-light bg-white p-2 shadow-xl">
+                <div className="absolute right-0 top-full z-50 mt-2 w-[220px] rounded-lg border border-line bg-white p-2 shadow-xl">
                   {compareCandidates.map((s) => (
                     <button
                       key={s.id}
@@ -432,8 +432,8 @@ export default function ScenarioBar() {
                       }}
                       className={`flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs hover:bg-black/[0.03] ${
                         s.id === compare.id
-                          ? 'font-bold text-pcl-indigo'
-                          : 'font-medium text-pcl-dark'
+                          ? 'font-bold text-brand-indigo'
+                          : 'font-medium text-ink'
                       }`}
                     >
                       <span className="min-w-0 truncate">{s.name}</span>

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { Item, ItemStatus } from '../types'
 import { useStore } from '../store'
-import { useRefPhaseById } from '../lib/selectors'
+import { useFundingClass, useRefPhaseById } from '../lib/selectors'
+import { FUNDING_CLASSES, FUNDING_META, fundingChipStyle } from '../lib/funding'
 import { escalatedCost } from '../lib/escalation'
 import { allocSum } from '../lib/alloc'
 import { CONT_YEARS, PHASE_BY_ID } from '../lib/phases'
@@ -9,12 +10,12 @@ import { fmtFull } from '../lib/format'
 import { TRADE_ACCENT } from '../lib/trades'
 
 // Level tag — now neutral gray (card color identity belongs to the trade accent).
-const LEVEL_CHIP = 'shrink-0 rounded border border-pcl-light bg-black/[0.04] px-1.5 py-0.5 text-[10px] font-medium text-pcl-dark'
+const LEVEL_CHIP = 'shrink-0 rounded border border-line bg-black/[0.04] px-1.5 py-0.5 text-[10px] font-medium text-ink'
 
 // Small "excluded" mark shown (in place of a checkbox) when scope toggles are off.
 function ExcludedMark() {
   return (
-    <span className="shrink-0 rounded bg-black/[0.04] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-pcl-mid">
+    <span className="shrink-0 rounded bg-black/[0.04] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-ink-muted">
       excluded
     </span>
   )
@@ -26,7 +27,7 @@ function Grip() {
     <svg
       viewBox="0 0 8 12"
       aria-hidden
-      className="h-3 w-2 shrink-0 text-[#9aa6a0] transition-colors group-hover:text-pcl-green"
+      className="h-3 w-2 shrink-0 text-grip transition-colors group-hover:text-accent"
       fill="currentColor"
     >
       <circle cx="2" cy="2" r="1" />
@@ -49,11 +50,11 @@ const STATUS_LABEL: Record<ItemStatus, string> = {
 function statusPillClass(status: ItemStatus): string {
   switch (status) {
     case 'required':
-      return 'bg-pcl-green/10 text-pcl-green border-pcl-green/30'
+      return 'bg-accent/10 text-accent border-accent/30'
     case 'deferrable':
-      return 'bg-pcl-indigo/10 text-pcl-indigo border-pcl-indigo/30'
+      return 'bg-brand-indigo/10 text-brand-indigo border-brand-indigo/30'
     default:
-      return 'bg-black/[0.04] text-pcl-dark border-pcl-light'
+      return 'bg-black/[0.04] text-ink border-line'
   }
 }
 
@@ -74,14 +75,14 @@ function AllocEditor({
   const balanced = sum === 100
 
   return (
-    <div className="mt-2 rounded border border-pcl-light bg-black/[0.02] p-2">
+    <div className="mt-2 rounded border border-line bg-black/[0.02] p-2">
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-[10px] font-medium uppercase tracking-wider text-pcl-mid">
+        <span className="text-[10px] font-medium uppercase tracking-wider text-ink-muted">
           Spend allocation
         </span>
         <span
           className={`text-[10px] font-bold tabular-nums ${
-            balanced ? 'text-pcl-green' : 'text-pcl-orange'
+            balanced ? 'text-accent' : 'text-alert'
           }`}
         >
           Σ {sum}%
@@ -89,7 +90,7 @@ function AllocEditor({
       </div>
       {CONT_YEARS.map((y) => (
         <div key={y} className="flex items-center gap-2 py-0.5">
-          <span className="w-9 shrink-0 text-[10px] font-medium tabular-nums text-pcl-dark">
+          <span className="w-9 shrink-0 text-[10px] font-medium tabular-nums text-ink">
             {y}
           </span>
           <input
@@ -103,7 +104,7 @@ function AllocEditor({
             aria-label={`${item.name} ${y} allocation`}
             className="h-1 flex-1 cursor-pointer"
           />
-          <span className="w-9 shrink-0 text-right text-[10px] font-bold tabular-nums text-pcl-dark">
+          <span className="w-9 shrink-0 text-right text-[10px] font-bold tabular-nums text-ink">
             {item.alloc[y]}%
           </span>
         </div>
@@ -125,6 +126,9 @@ export default function ScopeCard({
   const toggleIncluded = useStore((s) => s.toggleIncluded)
   const setStatus = useStore((s) => s.setStatus)
   const compareOn = useStore((s) => s.compareScenarioId !== null)
+  const fundingLens = useStore((s) => s.fundingLens)
+  const setFundingClass = useStore((s) => s.setFundingClass)
+  const fundingClass = useFundingClass(item.id)
   const refPhaseById = useRefPhaseById()
   const [confirmOpen, setConfirmOpen] = useState(false)
   // Disable card drag while a slider is being manipulated, so dragging the
@@ -151,7 +155,7 @@ export default function ScopeCard({
   const refPhase = refPhaseById[item.id]
   const wasBadge = compareOn && refPhase !== undefined && refPhase !== item.phase && (
     <span
-      className="shrink-0 rounded bg-pcl-yellow/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#8a6d00]"
+      className="shrink-0 rounded bg-brand-yellow/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-yellow-ink"
       title={`${PHASE_BY_ID[refPhase].name} in comparison scenario`}
     >
       was {PHASE_BY_ID[refPhase].short}
@@ -173,10 +177,30 @@ export default function ScopeCard({
     setStatus(item.id, next)
   }
 
+  function cycleFunding() {
+    const next = FUNDING_CLASSES[(FUNDING_CLASSES.indexOf(fundingClass) + 1) % 3]
+    setFundingClass(item.id, next)
+  }
+
+  // Card color identity: trade accent normally, funding-class hue under the lens.
   const accentStyle = {
-    borderLeftColor: TRADE_ACCENT[item.trade],
+    borderLeftColor: fundingLens ? FUNDING_META[fundingClass].color : TRADE_ACCENT[item.trade],
     borderLeftWidth: 3,
   } as const
+
+  // Funding-class chip (lens only) — click cycles the illustrative
+  // classification; mirrors the status-pill edit pattern.
+  const fundingChip = fundingLens && (
+    <button
+      type="button"
+      onClick={cycleFunding}
+      title={`${FUNDING_META[fundingClass].label} — click to reclassify (illustrative)`}
+      className="shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-bold tracking-wide"
+      style={fundingChipStyle(fundingClass)}
+    >
+      {FUNDING_META[fundingClass].short}
+    </button>
+  )
 
   const dragProps = {
     draggable: dragEnabled,
@@ -189,15 +213,15 @@ export default function ScopeCard({
   // Confirm dialog for deferring a required (building-need) item — shared by
   // both densities.
   const confirmDialog = confirmOpen && (
-    <div className="absolute inset-0 z-10 flex flex-col justify-center gap-2 rounded-md border border-pcl-green bg-white p-3 shadow-lg">
-      <p className="text-xs font-medium leading-snug text-pcl-dark">
+    <div className="absolute inset-0 z-10 flex flex-col justify-center gap-2 rounded-md border border-accent bg-white p-3 shadow-lg">
+      <p className="text-xs font-medium leading-snug text-ink">
         This is a building-need system — defer anyway?
       </p>
       <div className="flex justify-end gap-2">
         <button
           type="button"
           onClick={() => setConfirmOpen(false)}
-          className="rounded border border-pcl-light px-2.5 py-1 text-[11px] font-medium text-pcl-dark hover:bg-black/[0.04]"
+          className="rounded border border-line px-2.5 py-1 text-[11px] font-medium text-ink hover:bg-black/[0.04]"
         >
           Keep
         </button>
@@ -207,7 +231,7 @@ export default function ScopeCard({
             toggleIncluded(item.id)
             setConfirmOpen(false)
           }}
-          className="rounded bg-pcl-green px-2.5 py-1 text-[11px] font-medium text-white hover:opacity-90"
+          className="rounded bg-accent px-2.5 py-1 text-[11px] font-medium text-white hover:opacity-90"
         >
           Defer anyway
         </button>
@@ -222,13 +246,14 @@ export default function ScopeCard({
         {...dragProps}
         style={accentStyle}
         className={`group relative flex cursor-grab items-center gap-2 rounded-md border bg-white px-2 py-1.5 shadow-sm transition-all hover:shadow-md active:cursor-grabbing ${
-          item.included ? 'border-pcl-light' : 'border-dashed border-pcl-mid opacity-60'
+          item.included ? 'border-line' : 'border-dashed border-ink-muted opacity-60'
         }`}
       >
         <Grip />
         <span className={LEVEL_CHIP}>{item.level}</span>
+        {fundingChip}
         <span
-          className="min-w-0 flex-1 truncate text-xs font-medium text-pcl-dark"
+          className="min-w-0 flex-1 truncate text-xs font-medium text-ink"
           title={item.name}
         >
           {item.name}
@@ -237,7 +262,7 @@ export default function ScopeCard({
         {!showToggles && !item.included && <ExcludedMark />}
         <span
           className={`shrink-0 text-xs font-bold tabular-nums ${
-            item.included ? 'text-pcl-dark' : 'text-pcl-mid line-through'
+            item.included ? 'text-ink' : 'text-ink-muted line-through'
           }`}
         >
           {item.included ? fmtFull(esc) : '$0'}
@@ -247,7 +272,7 @@ export default function ScopeCard({
             type="checkbox"
             checked={item.included}
             onChange={handleToggle}
-            className="h-3.5 w-3.5 shrink-0 cursor-pointer accent-pcl-green"
+            className="h-3.5 w-3.5 shrink-0 cursor-pointer accent-accent"
             aria-label={`Include ${item.name}`}
           />
         )}
@@ -261,7 +286,7 @@ export default function ScopeCard({
       {...dragProps}
       style={accentStyle}
       className={`group relative cursor-grab rounded-md border bg-white p-2.5 shadow-sm transition-all hover:-translate-y-px hover:shadow-md active:cursor-grabbing ${
-        item.included ? 'border-pcl-light' : 'border-dashed border-pcl-mid opacity-60'
+        item.included ? 'border-line' : 'border-dashed border-ink-muted opacity-60'
       }`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -270,16 +295,17 @@ export default function ScopeCard({
               (native HTML5 DnD); this is a visual cue only. */}
           <Grip />
           <span className={LEVEL_CHIP}>{item.level}</span>
+          {fundingChip}
           {wasBadge}
         </span>
         {/* Include toggle — or an "excluded" mark when scope toggles are off. */}
         {showToggles ? (
-          <label className="flex shrink-0 cursor-pointer items-center gap-1 text-[10px] font-medium text-pcl-mid">
+          <label className="flex shrink-0 cursor-pointer items-center gap-1 text-[10px] font-medium text-ink-muted">
             <input
               type="checkbox"
               checked={item.included}
               onChange={handleToggle}
-              className="h-3.5 w-3.5 cursor-pointer accent-pcl-green"
+              className="h-3.5 w-3.5 cursor-pointer accent-accent"
               aria-label={`Include ${item.name}`}
             />
             {item.included ? 'In' : 'Out'}
@@ -290,7 +316,7 @@ export default function ScopeCard({
       </div>
 
       <p
-        className="mt-1.5 text-xs font-medium leading-snug text-pcl-dark"
+        className="mt-1.5 text-xs font-medium leading-snug text-ink"
         title={item.name}
       >
         {item.name}
@@ -298,17 +324,17 @@ export default function ScopeCard({
 
       <div className="mt-2 flex items-end justify-between">
         <div className="leading-tight">
-          <div className="text-[10px] font-light text-pcl-mid">
+          <div className="text-[10px] font-light text-ink-muted">
             base {fmtFull(item.base)}
           </div>
           <div
             className={`text-sm font-bold tabular-nums ${
-              item.included ? 'text-pcl-dark' : 'text-pcl-mid line-through'
+              item.included ? 'text-ink' : 'text-ink-muted line-through'
             }`}
           >
             {item.included ? fmtFull(esc) : '$0'}
             {escalatedUp && (
-              <span className="ml-1 align-middle text-[10px] font-medium text-pcl-green">
+              <span className="ml-1 align-middle text-[10px] font-medium text-accent">
                 ▲
               </span>
             )}

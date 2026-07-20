@@ -12,20 +12,20 @@ interface StatProps {
 function Stat({ label, children, sub, hero }: StatProps) {
   return (
     <div className="flex flex-col justify-center px-6 py-4">
-      <span className="text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+      <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
         {label}
       </span>
       <span
         className={
           hero
-            ? 'mt-1 font-bold leading-none text-pcl-green'
-            : 'mt-1 font-medium leading-none text-pcl-dark'
+            ? 'mt-1 font-bold leading-none text-accent'
+            : 'mt-1 font-medium leading-none text-ink'
         }
         style={hero ? { fontSize: '3rem' } : { fontSize: '1.5rem' }}
       >
         {children}
       </span>
-      {sub && <span className="mt-1 text-xs font-light text-pcl-dark">{sub}</span>}
+      {sub && <span className="mt-1 text-xs font-light text-ink">{sub}</span>}
     </div>
   )
 }
@@ -40,7 +40,7 @@ export default function HeadlineBar() {
   const delta = totals.escalatedTotal - refTotals.escalatedTotal
   const deltaPct = refTotals.escalatedTotal ? delta / refTotals.escalatedTotal : 0
   const deltaColor =
-    delta > 0 ? 'text-pcl-dark' : delta < 0 ? 'text-pcl-green' : 'text-pcl-mid'
+    delta > 0 ? 'text-ink' : delta < 0 ? 'text-accent' : 'text-ink-muted'
 
   // Per-year spend deltas — only shown while comparing.
   const perYearDeltas = compare
@@ -51,7 +51,7 @@ export default function HeadlineBar() {
     : null
 
   return (
-    <div className="grid grid-cols-2 divide-x divide-pcl-light border-b border-pcl-light bg-white md:grid-cols-4">
+    <div className="grid grid-cols-2 divide-x divide-line border-b border-line bg-white md:grid-cols-4">
       <Stat label="Total Escalated Cost" hero>
         {fmtMillions(totals.escalatedTotal)}
       </Stat>
@@ -71,7 +71,7 @@ export default function HeadlineBar() {
                   ’{String(d.year).slice(2)}{' '}
                   <span
                     className={
-                      d.delta > 0 ? 'text-pcl-dark' : d.delta < 0 ? 'text-pcl-green' : 'text-pcl-mid'
+                      d.delta > 0 ? 'text-ink' : d.delta < 0 ? 'text-accent' : 'text-ink-muted'
                     }
                   >
                     {fmtDeltaMillions(d.delta)}

@@ -25,6 +25,7 @@ import type {
 } from '../../lib/sequence'
 import { DistributedTip, ItemTip } from './SequenceTooltip'
 import type { HoverHandler } from './SequenceTooltip'
+import { color as C, seq as SEQ } from '../../lib/tokens'
 
 // Transitions run on fill/opacity only — elements keep stable keys, so window
 // scrubbing animates smoothly instead of re-mounting.
@@ -116,7 +117,7 @@ export default function LevelShapes({
         const semi = p.geo.treatment === 'semi'
         const fill = shade?.fill ?? '#ffffff'
         const fillOpacity = semi ? 0.55 : 1
-        const stroke = shade?.state === 'excluded' ? '#c6c8c5' : accent
+        const stroke = shade?.state === 'excluded' ? SEQ.structure.excludedStroke : accent
         const strokeOpacity = shade?.strokeOpacity ?? 1
         // Future windows under a selection: faint 1px outline, near-white fill.
         const strokeWidth = shade?.state === 'future' && strokeOpacity < 1 ? 1 : 0.8
@@ -164,8 +165,8 @@ function Tick({ x, y }: { x: number; y: number }) {
   return (
     <path
       d={`M ${x},${y - 4} L ${x + 4},${y} L ${x},${y + 4} L ${x - 4},${y} Z`}
-      fill="#FFC425"
-      stroke="#8a6d00"
+      fill={C.brandYellow}
+      stroke={C.brandYellowInk}
       strokeWidth={0.6}
       pointerEvents="none"
     />

@@ -10,6 +10,7 @@ import {
 } from '../lib/capacity'
 import type { CapacityState, WindowCapacity } from '../lib/capacity'
 import { fmtMillions, fmtPct } from '../lib/format'
+import { color as C } from '../lib/tokens'
 
 // --- small formatters ----------------------------------------------------
 function fmtPerDay(v: number): string {
@@ -22,9 +23,9 @@ const STATE_STYLE: Record<
   CapacityState,
   { fill: string; text: string; label: string }
 > = {
-  headroom: { fill: '#005D2F', text: 'text-pcl-green', label: 'Headroom' },
-  near: { fill: '#FFC425', text: 'text-[#8a6d0b]', label: 'Near capacity' },
-  over: { fill: '#D83C31', text: 'text-pcl-orange', label: 'Over ceiling' },
+  headroom: { fill: C.accent, text: 'text-accent', label: 'Headroom' },
+  near: { fill: C.brandYellow, text: 'text-brand-yellow-ink-soft', label: 'Near capacity' },
+  over: { fill: C.alert, text: 'text-alert', label: 'Over ceiling' },
 }
 
 // --- editable planning-assumption input ----------------------------------
@@ -45,10 +46,10 @@ function AssumptionInput({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+      <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
         {label}
       </span>
-      <span className="flex items-baseline gap-1 rounded border border-pcl-light bg-white px-2 py-1.5 focus-within:border-pcl-green">
+      <span className="flex items-baseline gap-1 rounded border border-line bg-white px-2 py-1.5 focus-within:border-accent">
         <input
           type="number"
           value={value}
@@ -58,9 +59,9 @@ function AssumptionInput({
             const n = Number(e.target.value)
             if (Number.isFinite(n)) onChange(n)
           }}
-          className="w-16 bg-transparent text-right text-base font-bold tabular-nums text-pcl-dark outline-none"
+          className="w-16 bg-transparent text-right text-base font-bold tabular-nums text-ink outline-none"
         />
-        <span className="text-xs font-medium text-pcl-mid">{suffix}</span>
+        <span className="text-xs font-medium text-ink-muted">{suffix}</span>
       </span>
     </label>
   )
@@ -75,25 +76,25 @@ function WindowRow({ row, scaleMax }: { row: WindowCapacity; scaleMax: number })
 
   return (
     <div className="flex items-center gap-3 py-1.5">
-      <span className="w-28 shrink-0 text-xs font-medium text-pcl-dark">
+      <span className="w-28 shrink-0 text-xs font-medium text-ink">
         {row.phase.name}
-        <span className="ml-1 text-pcl-mid">{row.phase.year}</span>
+        <span className="ml-1 text-ink-muted">{row.phase.year}</span>
       </span>
 
       {/* Bar — all windows share one absolute $ scale, so each window's ceiling
           marker lands at its true position and the offseason/during-season
           headroom gap is visually literal. */}
-      <div className="relative h-6 flex-1 rounded bg-[#f0f0ef]">
+      <div className="relative h-6 flex-1 rounded bg-track-bg">
         <div
           className="h-full rounded transition-[width] duration-300"
           style={{ width: `${fillPct}%`, backgroundColor: style.fill }}
         />
         {/* ceiling marker */}
         <div
-          className="absolute top-[-3px] bottom-[-3px] w-px bg-pcl-dark/70"
+          className="absolute top-[-3px] bottom-[-3px] w-px bg-ink/70"
           style={{ left: `${ceilPct}%` }}
         >
-          <span className="absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-medium text-pcl-mid">
+          <span className="absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-medium text-ink-muted">
             {fmtMillions(row.capacity)}
           </span>
         </div>
@@ -103,14 +104,14 @@ function WindowRow({ row, scaleMax }: { row: WindowCapacity; scaleMax: number })
         <span className={`text-sm font-bold tabular-nums ${style.text}`}>
           {fmtPct(row.utilization, 0)}
         </span>
-        <span className="text-[10px] font-medium uppercase tracking-wide text-pcl-mid">
+        <span className="text-[10px] font-medium uppercase tracking-wide text-ink-muted">
           {style.label}
         </span>
       </div>
 
-      <span className="w-24 shrink-0 text-right text-xs tabular-nums text-pcl-dark">
+      <span className="w-24 shrink-0 text-right text-xs tabular-nums text-ink">
         {fmtPerDay(row.perWorkday)}
-        <span className="text-pcl-mid">/day</span>
+        <span className="text-ink-muted">/day</span>
       </span>
     </div>
   )
@@ -131,10 +132,10 @@ function KindGroup({
 }) {
   return (
     <div>
-      <div className="mb-1 flex items-baseline justify-between border-b border-pcl-light pb-1">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-pcl-dark">
+      <div className="mb-1 flex items-baseline justify-between border-b border-line pb-1">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-ink">
           {title}
-          <span className="ml-2 font-medium normal-case tracking-normal text-pcl-mid">
+          <span className="ml-2 font-medium normal-case tracking-normal text-ink-muted">
             ceiling {fmtMillions(ceiling)} · {note}
           </span>
         </h4>
@@ -173,12 +174,12 @@ export default function CapacityTab() {
   return (
     <div className="flex flex-col gap-4 px-6 py-4">
       {/* Planning-assumption inputs */}
-      <section className="rounded-lg border border-pcl-light bg-white p-4">
+      <section className="rounded-lg border border-line bg-white p-4">
         <div className="mb-3 flex items-center gap-2">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-pcl-green">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
             Planning Assumptions
           </h3>
-          <span className="rounded-full bg-pcl-green/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-pcl-green">
+          <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent">
             editable
           </span>
         </div>
@@ -203,7 +204,7 @@ export default function CapacityTab() {
             onChange={(v) => setWorkdays(v > 0 ? v : 1)}
           />
         </div>
-        <p className="mt-3 text-[11px] font-light text-pcl-mid">
+        <p className="mt-3 text-[11px] font-light text-ink-muted">
           Throughput ceilings are the physical work an NBA window can absorb in
           2025 base dollars — escalation is excluded so a fixed ceiling isn&apos;t
           inflated. During-season windows cap at {fmtMillions(cfg.duringSeasonBase)},
@@ -214,16 +215,16 @@ export default function CapacityTab() {
       </section>
 
       {/* Window capacity utilization */}
-      <section className="rounded-lg border border-pcl-light bg-white p-4">
+      <section className="rounded-lg border border-line bg-white p-4">
         <div className="mb-1 flex items-baseline justify-between">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-pcl-green">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
             Window Capacity Utilization
           </h3>
-          <span className="text-[11px] font-light text-pcl-mid">
+          <span className="text-[11px] font-light text-ink-muted">
             bars share one $ scale · ┃ = window ceiling
           </span>
         </div>
-        <p className="mb-4 text-[11px] font-light text-pcl-mid">
+        <p className="mb-4 text-[11px] font-light text-ink-muted">
           Included base scope loaded into each window vs its throughput ceiling.
           Implied daily throughput = window base load ÷ {workdays} workdays.
         </p>
@@ -246,7 +247,7 @@ export default function CapacityTab() {
         </div>
       </section>
 
-      <p className="px-1 text-[11px] font-light italic text-pcl-mid">
+      <p className="px-1 text-[11px] font-light italic text-ink-muted">
         Parametric capacity model — a planning proxy that compares loaded base
         dollars to per-window throughput ceilings. This is not a resource-loaded
         schedule: it carries no headcount, crew, craft, or labor-hour data.

@@ -11,8 +11,10 @@ import {
   fmtDeltaMillions,
   fmtDeltaPct,
 } from '../lib/format'
+import { color as C, printColors as P } from '../lib/tokens'
 
-const GREEN = '#005D2F'
+// Print accent — reads the token authority (brand accent).
+const GREEN = C.accent
 
 function KpiCard({
   label,
@@ -24,14 +26,14 @@ function KpiCard({
   sub?: string
 }) {
   return (
-    <div className="avoid-break border border-[#cfcfcf] px-3 py-2">
-      <div className="text-[8px] font-medium uppercase tracking-wider text-[#555]">
+    <div className="avoid-break border border-print-border px-3 py-2">
+      <div className="text-[8px] font-medium uppercase tracking-wider text-print-label">
         {label}
       </div>
       <div className="mt-0.5 text-lg font-bold leading-none" style={{ color: GREEN }}>
         {value}
       </div>
-      {sub && <div className="mt-0.5 text-[9px] text-[#333]">{sub}</div>}
+      {sub && <div className="mt-0.5 text-[9px] text-print-secondary">{sub}</div>}
     </div>
   )
 }
@@ -76,18 +78,18 @@ export default function PrintReport() {
   const excludedCount = totals.totalCount - totals.includedCount
 
   return (
-    <div className="print-report hidden bg-white p-0 text-[#111]">
+    <div className="print-report hidden bg-white p-0 text-print-body">
       {/* Report header */}
       <div className="avoid-break flex items-end justify-between border-b-2 pb-2" style={{ borderColor: GREEN }}>
         <div>
           <h1 className="text-xl font-bold" style={{ color: GREEN }}>
             Moda Center — Capital Program Planner
           </h1>
-          <p className="text-[10px] text-[#555]">
+          <p className="text-[10px] text-print-label">
             CM/GC Interview Demo · Live cost &amp; phase modeling · Confidential
           </p>
         </div>
-        <div className="text-right text-[10px] text-[#555]">
+        <div className="text-right text-[10px] text-print-label">
           <div className="font-medium">Phasing snapshot</div>
           <div>{printedOn}</div>
         </div>
@@ -116,7 +118,7 @@ export default function PrintReport() {
         <div className="mt-1 flex gap-6">
           {ESCALATION_YEARS.map((y) => (
             <div key={y} className="text-[11px]">
-              <span className="font-medium text-[#555]">{y}: </span>
+              <span className="font-medium text-print-label">{y}: </span>
               <span className="font-bold tabular-nums">{fmtPct(rates[y])}</span>
             </div>
           ))}
@@ -131,16 +133,16 @@ export default function PrintReport() {
         <div className="mt-1 grid grid-cols-2 gap-6">
           {/* By Phase — bars */}
           <div>
-            <div className="mb-1 text-[9px] font-medium uppercase tracking-wider text-[#555]">
+            <div className="mb-1 text-[9px] font-medium uppercase tracking-wider text-print-label">
               By Phase (continuous folded in)
             </div>
             <div className="flex flex-col gap-1">
               {byPhase.map((r) => (
                 <div key={r.label} className="flex items-center gap-2">
-                  <span className="w-24 shrink-0 text-right text-[9px] text-[#333]">
+                  <span className="w-24 shrink-0 text-right text-[9px] text-print-secondary">
                     {r.label}
                   </span>
-                  <span className="relative h-3 flex-1 border border-[#cfcfcf]">
+                  <span className="relative h-3 flex-1 border border-print-border">
                     <span
                       className="absolute left-0 top-0 h-full"
                       style={{
@@ -158,13 +160,13 @@ export default function PrintReport() {
           </div>
           {/* By Year — figures */}
           <div>
-            <div className="mb-1 text-[9px] font-medium uppercase tracking-wider text-[#555]">
+            <div className="mb-1 text-[9px] font-medium uppercase tracking-wider text-print-label">
               By Year
             </div>
             <div className="flex gap-4">
               {byYear.map((r) => (
-                <div key={r.year} className="border border-[#cfcfcf] px-3 py-1.5">
-                  <div className="text-[9px] font-medium uppercase tracking-wider text-[#555]">
+                <div key={r.year} className="border border-print-border px-3 py-1.5">
+                  <div className="text-[9px] font-medium uppercase tracking-wider text-print-label">
                     {r.year}
                   </div>
                   <div className="text-sm font-bold tabular-nums" style={{ color: GREEN }}>
@@ -173,7 +175,7 @@ export default function PrintReport() {
                 </div>
               ))}
             </div>
-            <p className="mt-2 text-[8px] leading-snug text-[#777]">
+            <p className="mt-2 text-[8px] leading-snug text-print-fine">
               Each year combines escalated discrete scope mapped to that year plus
               every continuous item&apos;s per-year allocated, escalated portion.
             </p>
@@ -190,30 +192,30 @@ export default function PrintReport() {
           {groups.map((g) => (
             <table key={g.phase.id} className="avoid-break w-full border-collapse text-[9px]">
               <thead>
-                <tr style={{ backgroundColor: '#eef4f0' }}>
+                <tr style={{ backgroundColor: P.headerTint }}>
                   <th
                     colSpan={2}
-                    className="border border-[#cfcfcf] px-2 py-1 text-left font-bold"
+                    className="border border-print-border px-2 py-1 text-left font-bold"
                     style={{ color: GREEN }}
                   >
                     {g.phase.name}
-                    <span className="ml-2 font-normal text-[#555]">
+                    <span className="ml-2 font-normal text-print-label">
                       {g.phase.year === null ? '2027–29' : g.phase.year} ·{' '}
                       {g.items.length} items
                     </span>
                   </th>
-                  <th className="border border-[#cfcfcf] px-2 py-1 text-right font-bold tabular-nums" style={{ color: GREEN }}>
+                  <th className="border border-print-border px-2 py-1 text-right font-bold tabular-nums" style={{ color: GREEN }}>
                     {fmtMillions(g.subtotal)}
                   </th>
                 </tr>
-                <tr className="text-[8px] uppercase tracking-wide text-[#777]">
-                  <th className="border border-[#e5e5e5] px-2 py-0.5 text-left font-medium">
+                <tr className="text-[8px] uppercase tracking-wide text-print-fine">
+                  <th className="border border-print-cell px-2 py-0.5 text-left font-medium">
                     Level · Trade
                   </th>
-                  <th className="border border-[#e5e5e5] px-2 py-0.5 text-left font-medium">
+                  <th className="border border-print-cell px-2 py-0.5 text-left font-medium">
                     Scope
                   </th>
-                  <th className="border border-[#e5e5e5] px-2 py-0.5 text-right font-medium">
+                  <th className="border border-print-cell px-2 py-0.5 text-right font-medium">
                     Escalated
                   </th>
                 </tr>
@@ -221,14 +223,14 @@ export default function PrintReport() {
               <tbody>
                 {g.items.map((it) => (
                   <tr key={it.id} className="avoid-break">
-                    <td className="border border-[#e5e5e5] px-2 py-0.5 align-top whitespace-nowrap">
+                    <td className="border border-print-cell px-2 py-0.5 align-top whitespace-nowrap">
                       <span className="font-medium">{it.level}</span>
-                      <span className="text-[#777]"> · {TRADE_SHORT[it.trade]}</span>
+                      <span className="text-print-fine"> · {TRADE_SHORT[it.trade]}</span>
                     </td>
-                    <td className="border border-[#e5e5e5] px-2 py-0.5 align-top">
+                    <td className="border border-print-cell px-2 py-0.5 align-top">
                       {it.name}
                     </td>
-                    <td className="border border-[#e5e5e5] px-2 py-0.5 text-right align-top tabular-nums">
+                    <td className="border border-print-cell px-2 py-0.5 text-right align-top tabular-nums">
                       {fmtFull(escalatedCost(it, rates))}
                     </td>
                   </tr>
@@ -246,7 +248,7 @@ export default function PrintReport() {
           <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: GREEN }}>
             Total Escalated Cost
             {excludedCount > 0 && (
-              <span className="ml-2 text-[9px] font-normal normal-case text-[#777]">
+              <span className="ml-2 text-[9px] font-normal normal-case text-print-fine">
                 {excludedCount} scope item{excludedCount === 1 ? '' : 's'} excluded
               </span>
             )}

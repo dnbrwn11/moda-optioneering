@@ -18,8 +18,9 @@ import {
 import type { Item } from '../../types'
 import type { Totals } from '../../lib/escalation'
 import { fmtMillions } from '../../lib/format'
+import { color as C, kindContinuous as KC } from '../../lib/tokens'
 
-const axisTick = { fontSize: 11, fill: '#A6A6A6' }
+const axisTick = { fontSize: 11, fill: C.inkMuted }
 const fmtAxis = (v: number) => `$${Math.round(v / 1e6)}M`
 
 export default function SensitivityChart({
@@ -36,18 +37,18 @@ export default function SensitivityChart({
   const currentTotal = totals.escalatedTotal
 
   return (
-    <section className="rounded-lg border border-pcl-light bg-white p-4">
+    <section className="rounded-lg border border-line bg-white p-4">
       <div className="mb-1 flex items-baseline justify-between">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-pcl-green">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
           Escalation Sensitivity
         </h3>
-        <span className="text-xs font-medium tabular-nums text-pcl-dark">
+        <span className="text-xs font-medium tabular-nums text-ink">
           Now {fmtMillions(currentTotal)}
         </span>
       </div>
-      <p className="mb-3 text-[11px] font-light text-pcl-mid">
+      <p className="mb-3 text-[11px] font-light text-ink-muted">
         Program total at a flat annual rate applied to every year.{' '}
-        <span className="font-medium text-pcl-dark">
+        <span className="font-medium text-ink">
           +1%/yr ≈ {fmtMillions(perPoint)}
         </span>
       </p>
@@ -58,7 +59,7 @@ export default function SensitivityChart({
             data={curve}
             margin={{ top: 8, right: 12, bottom: 4, left: 4 }}
           >
-            <CartesianGrid vertical={false} stroke="#ececeb" />
+            <CartesianGrid vertical={false} stroke={C.gridline} />
             <XAxis
               dataKey="ratePct"
               type="number"
@@ -66,7 +67,7 @@ export default function SensitivityChart({
               ticks={curve.map((c) => c.ratePct)}
               tickFormatter={(v: number) => `${v}%`}
               tick={axisTick}
-              axisLine={{ stroke: '#CFCFCF' }}
+              axisLine={{ stroke: C.line }}
               tickLine={false}
             />
             <YAxis
@@ -80,26 +81,26 @@ export default function SensitivityChart({
             {/* Current position markers. */}
             <ReferenceLine
               y={currentTotal}
-              stroke="#941F6E"
+              stroke={KC}
               strokeDasharray="4 4"
             />
             <ReferenceLine
               x={currentRatePct}
-              stroke="#941F6E"
+              stroke={KC}
               strokeDasharray="4 4"
             />
             <ReferenceDot
               x={currentRatePct}
               y={currentTotal}
               r={5}
-              fill="#941F6E"
+              fill={KC}
               stroke="#fff"
               strokeWidth={2}
               label={{
                 value: 'current',
                 position: 'top',
                 fontSize: 11,
-                fill: '#941F6E',
+                fill: KC,
               }}
             />
             <Tooltip
@@ -107,16 +108,16 @@ export default function SensitivityChart({
               formatter={(value: number) => [fmtMillions(value), 'Program total']}
               contentStyle={{
                 borderRadius: 8,
-                border: '1px solid #CFCFCF',
+                border: `1px solid ${C.line}`,
                 fontSize: 12,
               }}
             />
             <Line
               type="monotone"
               dataKey="total"
-              stroke="#005D2F"
+              stroke={C.accent}
               strokeWidth={2}
-              dot={{ r: 3, fill: '#005D2F' }}
+              dot={{ r: 3, fill: C.accent }}
               isAnimationActive={false}
             />
           </LineChart>

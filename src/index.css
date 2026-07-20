@@ -28,10 +28,28 @@
   font-display: swap;
   src: url('./fonts/barlow-700.woff2') format('woff2');
 }
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Design tokens — CSS-land mirror of src/theme/tokens.json (the authority).
+   Keep values in sync by hand when the token file changes. */
+:root {
+  --accent: #005d2f;
+  --accent-hover: #00753b;
+  --accent-tint: #f0f7f2;
+  --chrome: #005d2f;
+  --chrome-deep: #005d2f;
+  --ink: #36383d;
+  --ink-muted: #a6a6a6;
+  --surface: #ffffff;
+  --surface-alt: #f4f4f3;
+  --line: #cfcfcf;
+  --gridline: #ececeb;
+  --silver: #cfcfcf;
+  --alert: #d83c31;
+  --gold: #c9a227;
+}
 
 html,
 body,
@@ -43,14 +61,14 @@ body {
   margin: 0;
   font-family: 'Barlow', system-ui, sans-serif;
   font-weight: 300;
-  background-color: #f4f4f3;
-  color: #36383d;
+  background-color: var(--surface-alt);
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Calm, restrained slider styling (PCL green track fill via accent-color). */
+/* Calm, restrained slider styling (accent track fill via accent-color). */
 input[type='range'] {
-  accent-color: #005d2f;
+  accent-color: var(--accent);
 }
 
 /* Sequence-tab floating tooltip fade-in (~100ms). */

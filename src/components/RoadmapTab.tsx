@@ -18,6 +18,7 @@ import {
 } from '../lib/roadmap'
 import type { LongLeadKey, RoadmapAssumptions } from '../lib/roadmap'
 import type { WindowPhaseId } from '../data/arenaGeometry'
+import { seq as SEQ } from '../lib/tokens'
 import RoadmapTimeline from './roadmap/RoadmapTimeline'
 
 // --- editable planning-assumption input (Capacity-tab pattern) -------------
@@ -38,10 +39,10 @@ function AssumptionInput({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+      <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
         {label}
       </span>
-      <span className="flex items-baseline gap-1 self-start rounded border border-pcl-light bg-white px-2 py-1.5 focus-within:border-pcl-green">
+      <span className="flex items-baseline gap-1 self-start rounded border border-line bg-white px-2 py-1.5 focus-within:border-accent">
         <input
           type="number"
           value={value}
@@ -51,9 +52,9 @@ function AssumptionInput({
             const n = Number(e.target.value)
             if (Number.isFinite(n)) onChange(n)
           }}
-          className="w-16 bg-transparent text-right text-base font-bold tabular-nums text-pcl-dark outline-none"
+          className="w-16 bg-transparent text-right text-base font-bold tabular-nums text-ink outline-none"
         />
-        <span className="text-xs font-medium text-pcl-mid">{suffix}</span>
+        <span className="text-xs font-medium text-ink-muted">{suffix}</span>
       </span>
     </label>
   )
@@ -96,20 +97,20 @@ export default function RoadmapTab() {
   return (
     <div className="flex flex-col gap-4 px-6 py-4">
       {/* Assumptions panel. */}
-      <section className="rounded-lg border border-pcl-light bg-white p-4">
+      <section className="rounded-lg border border-line bg-white p-4">
         <div className="mb-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-pcl-green">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
               Procurement &amp; Design Assumptions
             </h3>
-            <span className="rounded-full bg-pcl-green/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-pcl-green">
+            <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent">
               editable
             </span>
           </div>
           <button
             type="button"
             onClick={() => setAssumptions(cloneDefaults())}
-            className="shrink-0 rounded border border-pcl-green px-3 py-1 text-xs font-medium text-pcl-green transition-colors hover:bg-pcl-green hover:text-white"
+            className="shrink-0 rounded border border-accent px-3 py-1 text-xs font-medium text-accent transition-colors hover:bg-accent hover:text-white"
           >
             Reset to defaults
           </button>
@@ -136,8 +137,8 @@ export default function RoadmapTab() {
           />
         </div>
 
-        <div className="mt-4 border-t border-pcl-light/60 pt-3">
-          <span className="text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+        <div className="mt-4 border-t border-line/60 pt-3">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
             Long-lead overrides
           </span>
           <div className="mt-2 grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -152,7 +153,7 @@ export default function RoadmapTab() {
                     >
                       {TRADE_SHORT[c.trade]}
                     </span>
-                    <span className="text-[11px] font-medium text-pcl-dark">{c.label}</span>
+                    <span className="text-[11px] font-medium text-ink">{c.label}</span>
                   </span>
                 }
                 value={assumptions.longLeadWeeks[c.key]}
@@ -165,26 +166,26 @@ export default function RoadmapTab() {
       </section>
 
       {/* Timeline. */}
-      <section className="rounded-lg border border-pcl-light bg-white p-4">
+      <section className="rounded-lg border border-line bg-white p-4">
         <div className="mb-1 flex items-baseline justify-between gap-2">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-pcl-green">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
             Owner Decision Timeline
           </h3>
           {atRiskCount > 0 && (
-            <span className="text-xs font-bold uppercase tracking-wide text-pcl-orange">
+            <span className="text-xs font-bold uppercase tracking-wide text-alert">
               {atRiskCount} at risk
             </span>
           )}
         </div>
-        <div className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-medium text-pcl-dark">
+        <div className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-medium text-ink">
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-4 rounded-sm bg-[#d5d7d4]" aria-hidden /> Design
+            <span className="h-2 w-4 rounded-sm" style={{ backgroundColor: SEQ.structure.slab }} aria-hidden /> Design
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-4 rounded-sm bg-[#b0b5b1]" aria-hidden /> Buyout
+            <span className="h-2 w-4 rounded-sm" style={{ backgroundColor: SEQ.structure.buyout }} aria-hidden /> Buyout
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-4 rounded-sm border border-dashed border-[#9aa09b] bg-white" aria-hidden /> Fabrication
+            <span className="h-2 w-4 rounded-sm border border-dashed bg-white" style={{ borderColor: SEQ.structure.drawn }} aria-hidden /> Fabrication
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-4 rounded-sm" style={{ backgroundColor: KIND_COLORS.offseason, opacity: 0.4 }} aria-hidden /> Offseason window
@@ -193,12 +194,15 @@ export default function RoadmapTab() {
             <span className="h-2.5 w-4 rounded-sm" style={{ backgroundColor: KIND_COLORS['during-season'], opacity: 0.4 }} aria-hidden /> During-season window
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2 w-2 rotate-45 bg-pcl-indigo" aria-hidden /> Long-lead order-by
+            <span className="inline-block h-2 w-2 rotate-45 bg-brand-indigo" aria-hidden /> Long-lead order-by
           </span>
-          <span className="flex items-center gap-1.5 text-pcl-orange">
-            <span className="h-2 w-2 rounded-full bg-pcl-orange" aria-hidden /> At risk (past today)
+          <span className="flex items-center gap-1.5 text-alert">
+            <span className="h-2 w-2 rounded-full bg-alert" aria-hidden /> At risk (past today)
           </span>
         </div>
+        <p className="mb-1 text-[11px] font-light text-ink-muted">
+          Hover markers for detail; full decision list below.
+        </p>
         <RoadmapTimeline
           rows={roadmap.rows}
           marks={roadmap.marks}
@@ -208,11 +212,11 @@ export default function RoadmapTab() {
       </section>
 
       {/* Decision table — soonest first. */}
-      <section className="rounded-lg border border-pcl-light bg-white p-4">
-        <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-pcl-green">
+      <section className="rounded-lg border border-line bg-white p-4">
+        <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-accent">
           Decision Calendar
         </h3>
-        <div className="divide-y divide-pcl-light/60">
+        <div className="divide-y divide-line/60">
           {roadmap.decisions.map((d) => {
             const kind = d.kind === 'decision' ? 'Decide' : 'Order'
             return (
@@ -222,7 +226,7 @@ export default function RoadmapTab() {
               >
                 <span
                   className={`w-24 shrink-0 text-xs font-bold tabular-nums ${
-                    d.atRisk ? 'text-pcl-orange' : 'text-pcl-dark'
+                    d.atRisk ? 'text-alert' : 'text-ink'
                   }`}
                 >
                   {fmtDay(d.date)}
@@ -238,20 +242,20 @@ export default function RoadmapTab() {
                 >
                   {d.windowLabel}
                 </span>
-                <span className="shrink-0 rounded bg-black/[0.04] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-pcl-mid">
+                <span className="shrink-0 rounded bg-black/[0.04] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-ink-muted">
                   {kind}
                 </span>
-                <span className="min-w-0 flex-1 text-xs font-medium text-pcl-dark">
+                <span className="min-w-0 flex-1 text-xs font-medium text-ink">
                   {d.what}
                 </span>
-                <span className="shrink-0 text-[11px] font-light text-pcl-mid">
+                <span className="shrink-0 text-[11px] font-light text-ink-muted">
                   {d.leadNote}
                 </span>
-                <span className="w-16 shrink-0 text-right text-[11px] tabular-nums text-pcl-mid">
+                <span className="w-16 shrink-0 text-right text-[11px] tabular-nums text-ink-muted">
                   {fmtMillions(moneyByPhase[d.windowPhase] ?? 0)}
                 </span>
                 {d.atRisk && (
-                  <span className="shrink-0 rounded bg-pcl-orange px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
+                  <span className="shrink-0 rounded bg-alert px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
                     at risk
                   </span>
                 )}
@@ -261,7 +265,7 @@ export default function RoadmapTab() {
         </div>
       </section>
 
-      <p className="px-1 text-[11px] font-light italic text-pcl-mid">
+      <p className="px-1 text-[11px] font-light italic text-ink-muted">
         Parametric procurement model — planning assumptions, not a CPM schedule. Durations are
         editable estimates for owner discussion. Long-lead order-by dates anchor to each
         category&rsquo;s first-need window from the live phase assignments; excluded equipment

@@ -21,12 +21,12 @@ function YearSlider({ year }: { year: Year }) {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-baseline justify-between">
-        <span className="text-xs font-medium uppercase tracking-wider text-pcl-dark">
+        <span className="text-xs font-medium uppercase tracking-wider text-ink">
           {year}
         </span>
         <span
           className={`text-base font-bold tabular-nums ${
-            offDefault ? 'text-pcl-green' : 'text-pcl-dark'
+            offDefault ? 'text-accent' : 'text-ink'
           }`}
         >
           {fmtPct(rate)}
@@ -42,7 +42,7 @@ function YearSlider({ year }: { year: Year }) {
         aria-label={`${year} escalation rate`}
         className="w-full cursor-pointer"
       />
-      <div className="flex justify-between text-[10px] font-light text-pcl-mid">
+      <div className="flex justify-between text-[10px] font-light text-ink-muted">
         <span>0%</span>
         <span>10%</span>
       </div>
@@ -70,7 +70,7 @@ export default function EscalationChip() {
         aria-label="Escalation rates"
         className="flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-xs font-bold tabular-nums text-white transition-colors hover:bg-white/20"
       >
-        <span className="uppercase tracking-wider text-pcl-yellow">ESC ·</span>
+        <span className="uppercase tracking-wider text-brand-yellow">ESC ·</span>
         <span>{ratesLine(rates)}</span>
         <svg
           viewBox="0 0 12 12"
@@ -94,16 +94,16 @@ export default function EscalationChip() {
             aria-hidden
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 top-full z-50 mt-2 w-[340px] rounded-lg border border-pcl-light bg-white p-4 text-pcl-dark shadow-xl">
+          <div className="absolute right-0 top-full z-50 mt-2 w-[340px] rounded-lg border border-line bg-white p-4 text-ink shadow-xl">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-pcl-green">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-accent">
                 Escalation · per-year rate
               </h2>
               <button
                 type="button"
                 onClick={resetRates}
                 disabled={allDefault}
-                className="rounded border border-pcl-green px-2.5 py-1 text-xs font-medium text-pcl-green transition-colors hover:bg-pcl-green hover:text-white disabled:cursor-default disabled:border-pcl-light disabled:text-pcl-mid disabled:hover:bg-transparent disabled:hover:text-pcl-mid"
+                className="rounded border border-accent px-2.5 py-1 text-xs font-medium text-accent transition-colors hover:bg-accent hover:text-white disabled:cursor-default disabled:border-line disabled:text-ink-muted disabled:hover:bg-transparent disabled:hover:text-ink-muted"
               >
                 Reset to 5%
               </button>
@@ -113,7 +113,7 @@ export default function EscalationChip() {
                 <YearSlider key={y} year={y} />
               ))}
             </div>
-            <p className="mt-3 text-[11px] font-light text-pcl-mid">
+            <p className="mt-3 text-[11px] font-light text-ink-muted">
               Compounds from 2025. Dial each year independently to scale
               escalation between years — every affected item and the headline
               update live.

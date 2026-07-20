@@ -1,18 +1,17 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useStore } from '../store'
 import { useTotals } from '../lib/selectors'
 import { TIME_PHASES } from '../lib/phases'
 import { KIND_COLORS } from '../lib/analytics'
 import {
   crewCell,
-  GLOBAL_DEFAULTS,
   LABOR_FRACTION_DEFAULTS,
   tradeWindowSpend,
 } from '../lib/resources'
-import type { GlobalAssumptions } from '../lib/resources'
 import type { Trade } from '../types'
 import { fmtMillions } from '../lib/format'
 import StaffingHistogram from './resources/StaffingHistogram'
+import { color as TOKEN } from '../lib/tokens'
 
 const ALL_TRADES = Object.keys(LABOR_FRACTION_DEFAULTS) as Trade[]
 const AGING: Trade = 'Aging Assets (Owner Decision)'
@@ -38,8 +37,8 @@ function NumInput({
   width?: string
 }) {
   return (
-    <span className="inline-flex items-baseline gap-1 rounded border border-pcl-light bg-white px-2 py-1 focus-within:border-pcl-green">
-      {prefix && <span className="text-xs font-medium text-pcl-mid">{prefix}</span>}
+    <span className="inline-flex items-baseline gap-1 rounded border border-line bg-white px-2 py-1 focus-within:border-accent">
+      {prefix && <span className="text-xs font-medium text-ink-muted">{prefix}</span>}
       <input
         type="number"
         value={value}
@@ -50,9 +49,9 @@ function NumInput({
           const n = Number(e.target.value)
           if (Number.isFinite(n)) onChange(n)
         }}
-        className={`${width} bg-transparent text-right text-sm font-bold tabular-nums text-pcl-dark outline-none`}
+        className={`${width} bg-transparent text-right text-sm font-bold tabular-nums text-ink outline-none`}
       />
-      {suffix && <span className="text-xs font-medium text-pcl-mid">{suffix}</span>}
+      {suffix && <span className="text-xs font-medium text-ink-muted">{suffix}</span>}
     </span>
   )
 }
@@ -62,17 +61,13 @@ export default function ResourcesTab() {
   const rates = useStore((s) => s.rates)
   const totals = useTotals()
 
-  const [fractions, setFractions] = useState<Record<Trade, number>>({
-    ...LABOR_FRACTION_DEFAULTS,
-  })
-  const [g, setG] = useState<GlobalAssumptions>({ ...GLOBAL_DEFAULTS })
-
-  function reset() {
-    setFractions({ ...LABOR_FRACTION_DEFAULTS })
-    setG({ ...GLOBAL_DEFAULTS })
-  }
-  const setGlobal = (k: keyof GlobalAssumptions, v: number) =>
-    setG((prev) => ({ ...prev, [k]: v }))
+  // Assumptions live in the store (shared with the Participation tab, which
+  // reads the same labor model) and persist across tab switches and reloads.
+  const fractions = useStore((s) => s.laborFractions)
+  const g = useStore((s) => s.laborGlobals)
+  const setLaborFraction = useStore((s) => s.setLaborFraction)
+  const setGlobal = useStore((s) => s.setLaborGlobal)
+  const reset = useStore((s) => s.resetLaborAssumptions)
 
   // --- Engine: escalated spend per trade per window (reuses computeTotals) --
   const spendByTrade = useMemo(() => tradeWindowSpend(items, rates), [items, rates])
@@ -119,13 +114,13 @@ export default function ResourcesTab() {
     /* eslint-disable no-console */
     console.log(
       '%c[Moda Optioneering] resources reconciliation',
-      'color:#005D2F;font-weight:700',
+      `color:${TOKEN.accent};font-weight:700`,
     )
     console.log(
       `%cTrade×window escalated spend = ${fmtMillions(matrixSpend)}  ${
         reconciles ? '✓ reconciles' : '✗ MISMATCH'
       } (headline ${fmtMillions(totals.escalatedTotal)})`,
-      `color:${reconciles ? '#005D2F' : '#D83C31'};font-weight:700`,
+      `color:${reconciles ? TOKEN.accent : TOKEN.alert};font-weight:700`,
     )
     /* eslint-enable no-console */
   }, [matrixSpend, reconciles, totals.escalatedTotal])
@@ -133,20 +128,20 @@ export default function ResourcesTab() {
   return (
     <div className="flex flex-col gap-4 px-6 py-4">
       {/* 1 · Assumptions panel ------------------------------------------- */}
-      <section className="rounded-lg border border-pcl-light bg-white p-4">
+      <section className="rounded-lg border border-line bg-white p-4">
         <div className="mb-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-pcl-green">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
               Staffing Assumptions
             </h3>
-            <span className="rounded-full bg-pcl-green/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-pcl-green">
+            <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent">
               editable
             </span>
           </div>
           <button
             type="button"
             onClick={reset}
-            className="shrink-0 rounded border border-pcl-green px-3 py-1 text-xs font-medium text-pcl-green transition-colors hover:bg-pcl-green hover:text-white"
+            className="shrink-0 rounded border border-accent px-3 py-1 text-xs font-medium text-accent transition-colors hover:bg-accent hover:text-white"
           >
             Reset to defaults
           </button>
@@ -155,7 +150,7 @@ export default function ResourcesTab() {
         {/* Global inputs */}
         <div className="mb-4 flex flex-wrap gap-x-6 gap-y-3">
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
               Blended craft rate
             </span>
             <NumInput
@@ -169,7 +164,7 @@ export default function ResourcesTab() {
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
               Peak factor
             </span>
             <NumInput
@@ -181,7 +176,7 @@ export default function ResourcesTab() {
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
               Crew week
             </span>
             <NumInput
@@ -193,7 +188,7 @@ export default function ResourcesTab() {
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
               Field staff divisor
             </span>
             <NumInput
@@ -205,7 +200,7 @@ export default function ResourcesTab() {
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
               Field staff base
             </span>
             <NumInput
@@ -219,21 +214,19 @@ export default function ResourcesTab() {
         </div>
 
         {/* Labor fraction per trade */}
-        <div className="border-t border-pcl-light pt-3">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-pcl-mid">
+        <div className="border-t border-line pt-3">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-ink-muted">
             Labor fraction per trade · share of escalated cost that is field labor
           </p>
           <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
             {ALL_TRADES.map((trade) => (
               <div key={trade} className="flex items-center justify-between gap-2">
-                <span className="min-w-0 truncate text-xs font-medium text-pcl-dark">
+                <span className="min-w-0 truncate text-xs font-medium text-ink">
                   {trade}
                 </span>
                 <NumInput
                   value={fractions[trade]}
-                  onChange={(v) =>
-                    setFractions((prev) => ({ ...prev, [trade]: v }))
-                  }
+                  onChange={(v) => setLaborFraction(trade, v)}
                   step={0.05}
                   min={0}
                   max={1}
@@ -248,35 +241,35 @@ export default function ResourcesTab() {
       <StaffingHistogram data={histdata} />
 
       {/* 3–4 · Crew matrix + footer ------------------------------------- */}
-      <section className="rounded-lg border border-pcl-light bg-white p-4">
+      <section className="rounded-lg border border-line bg-white p-4">
         <div className="mb-1 flex items-baseline justify-between">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-pcl-green">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
             Crew Matrix
           </h3>
           <span
             className={`text-[11px] font-medium tabular-nums ${
-              reconciles ? 'text-pcl-mid' : 'text-pcl-orange'
+              reconciles ? 'text-ink-muted' : 'text-alert'
             }`}
           >
             trade spend {reconciles ? 'reconciles to' : '✗ vs'}{' '}
             {fmtMillions(totals.escalatedTotal)}
           </span>
         </div>
-        <p className="mb-3 text-[11px] font-light text-pcl-mid">
+        <p className="mb-3 text-[11px] font-light text-ink-muted">
           Each cell: ~avg / ~peak craft on site. Blank = no crew that window.
         </p>
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] border-collapse text-xs">
             <thead>
-              <tr className="border-b border-pcl-light">
-                <th className="py-2 pr-3 text-left font-medium uppercase tracking-wider text-pcl-mid">
+              <tr className="border-b border-line">
+                <th className="py-2 pr-3 text-left font-medium uppercase tracking-wider text-ink-muted">
                   Trade
                 </th>
                 {TIME_PHASES.map((p) => (
                   <th
                     key={p.id}
-                    className="px-2 py-2 text-center font-medium text-pcl-dark"
+                    className="px-2 py-2 text-center font-medium text-ink"
                     style={{ borderTop: `2px solid ${KIND_COLORS[p.kind as 'offseason' | 'during-season']}` }}
                   >
                     {p.short}
@@ -286,24 +279,24 @@ export default function ResourcesTab() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.trade} className="border-b border-pcl-light/60">
+                <tr key={r.trade} className="border-b border-line/60">
                   <td className="py-1.5 pr-3">
-                    <span className="font-medium text-pcl-dark">{r.trade}</span>
-                    <span className="ml-2 tabular-nums text-pcl-mid">
+                    <span className="font-medium text-ink">{r.trade}</span>
+                    <span className="ml-2 tabular-nums text-ink-muted">
                       {fmtMillions(r.totalSpend)}
                     </span>
                   </td>
                   {r.cells.map((c, ci) => (
                     <td
                       key={ci}
-                      className="px-2 py-1.5 text-center tabular-nums text-pcl-dark"
+                      className="px-2 py-1.5 text-center tabular-nums text-ink"
                     >
                       {c.avg === 0 && c.peak === 0 ? (
-                        <span className="text-pcl-light">·</span>
+                        <span className="text-line">·</span>
                       ) : (
                         <span>
                           ~{c.avg}
-                          <span className="text-pcl-mid"> / </span>~{c.peak}
+                          <span className="text-ink-muted"> / </span>~{c.peak}
                         </span>
                       )}
                     </td>
@@ -312,30 +305,30 @@ export default function ResourcesTab() {
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t-2 border-pcl-light">
-                <td className="py-2 pr-3 text-right font-bold uppercase tracking-wide text-pcl-dark">
+              <tr className="border-t-2 border-line">
+                <td className="py-2 pr-3 text-right font-bold uppercase tracking-wide text-ink">
                   Site Peak Craft
                 </td>
                 {cols.map((c) => (
                   <td
                     key={c.phase.id}
-                    className="px-2 py-2 text-center font-bold tabular-nums text-pcl-green"
+                    className="px-2 py-2 text-center font-bold tabular-nums text-accent"
                   >
                     {c.sitePeak > 0 ? `~${c.sitePeak}` : '·'}
                   </td>
                 ))}
               </tr>
               <tr>
-                <td className="py-2 pr-3 text-right font-bold uppercase tracking-wide text-pcl-dark">
+                <td className="py-2 pr-3 text-right font-bold uppercase tracking-wide text-ink">
                   PCL Field Staff
-                  <span className="ml-1 font-normal normal-case tracking-normal text-pcl-mid">
+                  <span className="ml-1 font-normal normal-case tracking-normal text-ink-muted">
                     ⌈peak ÷ {g.fieldStaffDivisor}⌉ + {g.fieldStaffBase}
                   </span>
                 </td>
                 {cols.map((c) => (
                   <td
                     key={c.phase.id}
-                    className="px-2 py-2 text-center font-bold tabular-nums text-pcl-dark"
+                    className="px-2 py-2 text-center font-bold tabular-nums text-ink"
                   >
                     {c.fieldStaff}
                   </td>
@@ -347,7 +340,7 @@ export default function ResourcesTab() {
       </section>
 
       {/* 6 · Footnote (verbatim) ---------------------------------------- */}
-      <p className="px-1 text-[11px] font-light italic text-pcl-mid">
+      <p className="px-1 text-[11px] font-light italic text-ink-muted">
         Parametric estimate only — not a CPM or resource-loaded schedule. Labor
         fractions and craft rate are planning assumptions. Headcounts rounded to
         whole people.

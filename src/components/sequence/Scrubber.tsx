@@ -21,7 +21,7 @@ export default function Scrubber({ selectedIdx, playing, onSelect, onTogglePlay 
           onClick={onTogglePlay}
           aria-label={playing ? 'Pause sequence playback' : 'Play sequence'}
           title={playing ? 'Pause' : 'Play — auto-advance through the six windows'}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-pcl-green text-white transition-colors hover:bg-[#00753b]"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-white transition-colors hover:bg-accent-hover"
         >
           {playing ? (
             <svg viewBox="0 0 12 12" className="h-3 w-3" fill="currentColor" aria-hidden>
@@ -41,8 +41,8 @@ export default function Scrubber({ selectedIdx, playing, onSelect, onTogglePlay 
           title="All windows — mini intensity strips per level"
           className={`rounded-md border px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
             selectedIdx === null
-              ? 'border-pcl-dark bg-pcl-dark text-white'
-              : 'border-pcl-light bg-white text-pcl-mid hover:text-pcl-dark'
+              ? 'border-ink bg-ink text-white'
+              : 'border-line bg-white text-ink-muted hover:text-ink'
           }`}
         >
           All
@@ -70,7 +70,7 @@ export default function Scrubber({ selectedIdx, playing, onSelect, onTogglePlay 
           )
         })}
       </div>
-      <p className="min-h-[1rem] text-xs font-light italic text-pcl-dark">
+      <p className="min-h-[1rem] text-xs font-light italic text-ink">
         {selected ? selected.caption : 'All windows — select or play to sequence the work'}
       </p>
     </div>

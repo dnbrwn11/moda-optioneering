@@ -11,6 +11,14 @@ import {
   snapshotsEqual,
 } from './scenarios'
 import type { Scenario } from './scenarios'
+import { effectiveClass } from './funding'
+import type { FundingClass } from './funding'
+
+// Effective funding class for one item — per-id subscription so a lens
+// reclassification only re-renders the cards whose class actually changed.
+export function useFundingClass(id: string): FundingClass {
+  return useStore((s) => effectiveClass(id, s.fundingOverrides))
+}
 
 // Live totals derived from current items + rates.
 export function useTotals(): Totals {

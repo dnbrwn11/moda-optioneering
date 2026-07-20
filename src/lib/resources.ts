@@ -83,6 +83,16 @@ export interface CrewCell {
   peak: number // whole people
 }
 
+// Craft hours implied by an escalated spend slice — the single home for the
+// $→hours conversion; crewCell and the Participation tab both use it.
+export function craftHours(
+  spend: number,
+  laborFraction: number,
+  blendedRate: number,
+): number {
+  return blendedRate > 0 ? (spend * laborFraction) / blendedRate : 0
+}
+
 // Derive avg/peak craft for one trade in one window from its escalated spend.
 export function crewCell(
   spend: number,
@@ -90,9 +100,8 @@ export function crewCell(
   phase: PhaseId,
   g: GlobalAssumptions,
 ): CrewCell {
-  const laborDollars = spend * laborFraction
-  const craftHours = g.blendedRate > 0 ? laborDollars / g.blendedRate : 0
+  const hours = craftHours(spend, laborFraction, g.blendedRate)
   const wh = windowHours(phase, g.crewWeekHrs)
-  const avgRaw = wh > 0 ? craftHours / wh : 0
+  const avgRaw = wh > 0 ? hours / wh : 0
   return { avg: Math.round(avgRaw), peak: Math.round(avgRaw * g.peakFactor) }
 }

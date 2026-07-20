@@ -9,6 +9,7 @@ import {
   YAxis,
 } from 'recharts'
 import { KIND_COLORS } from '../../lib/analytics'
+import { chart as CH, color as C } from '../../lib/tokens'
 
 export interface HistogramPoint {
   label: string
@@ -16,22 +17,22 @@ export interface HistogramPoint {
   avg: number
 }
 
-const axisTick = { fontSize: 11, fill: '#A6A6A6' }
+const axisTick = { fontSize: 11, fill: C.inkMuted }
 
 export default function StaffingHistogram({ data }: { data: HistogramPoint[] }) {
   return (
-    <section className="rounded-lg border border-pcl-light bg-white p-4">
+    <section className="rounded-lg border border-line bg-white p-4">
       <div className="mb-1 flex items-baseline justify-between">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-pcl-green">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
           Site Craft Staffing Histogram
         </h3>
-        <span className="text-[11px] font-light text-pcl-mid">
+        <span className="text-[11px] font-light text-ink-muted">
           avg craft · chronological
         </span>
       </div>
 
       {/* Season legend — same colors as the Analytics S-curve bands. */}
-      <div className="mb-3 flex flex-wrap gap-3 text-[11px] font-medium text-pcl-dark">
+      <div className="mb-3 flex flex-wrap gap-3 text-[11px] font-medium text-ink">
         <span className="flex items-center gap-1.5">
           <span
             className="h-2.5 w-2.5 rounded-sm"
@@ -53,11 +54,11 @@ export default function StaffingHistogram({ data }: { data: HistogramPoint[] }) 
       <div className="h-72 w-full">
         <ResponsiveContainer>
           <BarChart data={data} margin={{ top: 8, right: 8, bottom: 4, left: 4 }}>
-            <CartesianGrid vertical={false} stroke="#ececeb" />
+            <CartesianGrid vertical={false} stroke={C.gridline} />
             <XAxis
               dataKey="label"
               tick={axisTick}
-              axisLine={{ stroke: '#CFCFCF' }}
+              axisLine={{ stroke: C.line }}
               tickLine={false}
             />
             <YAxis
@@ -70,15 +71,15 @@ export default function StaffingHistogram({ data }: { data: HistogramPoint[] }) 
                 value: 'avg craft',
                 angle: -90,
                 position: 'insideLeft',
-                style: { fontSize: 11, fill: '#A6A6A6' },
+                style: { fontSize: 11, fill: C.inkMuted },
               }}
             />
             <Tooltip
-              cursor={{ fill: 'rgba(0,93,47,0.06)' }}
+              cursor={{ fill: CH.cursorFill }}
               formatter={(value: number) => [`~${value} craft`, 'Avg on site']}
               contentStyle={{
                 borderRadius: 8,
-                border: '1px solid #CFCFCF',
+                border: `1px solid ${C.line}`,
                 fontSize: 12,
               }}
             />

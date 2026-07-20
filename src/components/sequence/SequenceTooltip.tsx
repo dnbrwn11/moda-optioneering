@@ -1,7 +1,7 @@
 // Single floating hover tooltip for the Sequence views — one React-rendered
 // instance, portaled to the app root and positioned from mouse coordinates.
 // Styled to be visually indistinguishable from the Analytics Recharts
-// tooltips (white card, #CFCFCF border, 8px radius, 12px type).
+// tooltips (white card, token line border, 8px radius, 12px type).
 //
 // Content components read the live store themselves, so a tooltip left open
 // while rates change never shows stale dollars.
@@ -18,6 +18,7 @@ import { levelChipStyle } from '../../lib/levels'
 import { GEOMETRY_BY_ID, SEQUENCE_WINDOWS } from '../../data/arenaGeometry'
 import { itemWindowSpend, SYSTEMS_GOLD } from '../../lib/sequence'
 import type { Trade } from '../../types'
+import { color as C } from '../../lib/tokens'
 
 export interface TipState {
   content: React.ReactNode
@@ -63,8 +64,8 @@ export function FloatingTooltip({ tip }: { tip: TipState | null }) {
   return createPortal(
     <div
       ref={ref}
-      className="pointer-events-none fixed left-0 top-0 z-50 max-w-[280px] rounded-lg border bg-white px-3 py-2 text-xs text-pcl-dark shadow-md"
-      style={{ borderColor: '#CFCFCF', animation: 'seq-tip-in 100ms ease-out' }}
+      className="pointer-events-none fixed left-0 top-0 z-50 max-w-[280px] rounded-lg border bg-white px-3 py-2 text-xs text-ink shadow-md"
+      style={{ borderColor: C.line, animation: 'seq-tip-in 100ms ease-out' }}
       role="tooltip"
     >
       {tip.content}
@@ -94,7 +95,7 @@ function windowLine(phase: string) {
 function MoneyRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <span className="text-pcl-mid">{label}</span>
+      <span className="text-ink-muted">{label}</span>
       <span className="font-bold tabular-nums">{value}</span>
     </div>
   )
@@ -122,7 +123,7 @@ export function ItemTip({ id }: { id: string }) {
         </span>
       </span>
       {windowLine(item.phase)}
-      <div className="flex flex-col gap-0.5 border-t pt-1.5" style={{ borderColor: '#ececeb' }}>
+      <div className="flex flex-col gap-0.5 border-t pt-1.5" style={{ borderColor: C.gridline }}>
         <MoneyRow label="Base (2025)" value={fmtMillions(item.base)} />
         <MoneyRow
           label="Escalated"
@@ -130,7 +131,7 @@ export function ItemTip({ id }: { id: string }) {
         />
         {item.qty > 1 && <MoneyRow label="Area" value={`${item.qty.toLocaleString('en-US')} SF`} />}
       </div>
-      {multi && <span className="italic text-pcl-mid">(multiple locations)</span>}
+      {multi && <span className="italic text-ink-muted">(multiple locations)</span>}
     </div>
   )
 }
@@ -147,8 +148,8 @@ export function DistributedTip({ ids }: { ids: string[] }) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-sm font-bold leading-tight">Distributed scopes</span>
-      <span className="italic text-pcl-mid">(multiple locations)</span>
-      <div className="flex flex-col gap-1 border-t pt-1.5" style={{ borderColor: '#ececeb' }}>
+      <span className="italic text-ink-muted">(multiple locations)</span>
+      <div className="flex flex-col gap-1 border-t pt-1.5" style={{ borderColor: C.gridline }}>
         {scoped.map((it) => (
           <div key={it.id} className="flex items-baseline justify-between gap-4">
             <span className="flex items-center gap-1.5 truncate">
@@ -196,10 +197,10 @@ export function SystemsTip({ selectedIdx }: { selectedIdx: number | null }) {
       <span className="text-sm font-bold leading-tight" style={{ color: SYSTEMS_GOLD }}>
         Building Systems (continuous)
       </span>
-      <span className="text-pcl-mid">
+      <span className="text-ink-muted">
         {selected ? `${selected.label} — ${PHASE_BY_ID[selected.phase].name}` : 'Full program'}
       </span>
-      <div className="flex flex-col gap-0.5 border-t pt-1.5" style={{ borderColor: '#ececeb' }}>
+      <div className="flex flex-col gap-0.5 border-t pt-1.5" style={{ borderColor: C.gridline }}>
         <MoneyRow label={selected ? 'Systems this window' : 'Systems total'} value={fmtMillions(amount)} />
         {top2.map(([trade, amt]) => (
           <div key={trade} className="flex items-baseline justify-between gap-4">
