@@ -6,7 +6,6 @@ import PhasingTab from './components/PhasingTab'
 import SequenceTab from './components/sequence/SequenceTab'
 import RoadmapTab from './components/RoadmapTab'
 import AnalyticsTab from './components/AnalyticsTab'
-import CapacityTab from './components/CapacityTab'
 import ResourcesTab from './components/ResourcesTab'
 import ParticipationTab from './components/ParticipationTab'
 import PrintReport from './components/PrintReport'
@@ -16,7 +15,6 @@ type Tab =
   | 'sequence'
   | 'roadmap'
   | 'analytics'
-  | 'capacity'
   | 'resources'
   | 'participation'
 
@@ -25,7 +23,6 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'sequence', label: 'Sequence' },
   { id: 'roadmap', label: 'Roadmap' },
   { id: 'analytics', label: 'Analytics' },
-  { id: 'capacity', label: 'Capacity' },
   { id: 'resources', label: 'Resources' },
   { id: 'participation', label: 'Participation' },
 ]
@@ -82,8 +79,6 @@ export default function App() {
             <RoadmapTab />
           ) : tab === 'analytics' ? (
             <AnalyticsTab />
-          ) : tab === 'capacity' ? (
-            <CapacityTab />
           ) : tab === 'resources' ? (
             <ResourcesTab />
           ) : (

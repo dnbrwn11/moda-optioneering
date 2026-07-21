@@ -1,6 +1,6 @@
 // Roadmap tab — the owner's decision calendar, back-cast from each
 // construction window through editable procurement/design durations. Same
-// declared-assumptions honesty pattern as the Resources/Capacity panels:
+// declared-assumptions honesty pattern as the Resources panels:
 // parametric planning math, explicitly not a CPM schedule. Assumptions are
 // tab-local state; the long-lead → item mapping reads the live store, so
 // phasing edits and scenario switches re-anchor order-by dates automatically.
@@ -21,7 +21,7 @@ import type { WindowPhaseId } from '../data/arenaGeometry'
 import { seq as SEQ } from '../lib/tokens'
 import RoadmapTimeline from './roadmap/RoadmapTimeline'
 
-// --- editable planning-assumption input (Capacity-tab pattern) -------------
+// --- editable planning-assumption input ------------------------------------
 function AssumptionInput({
   label,
   value,
