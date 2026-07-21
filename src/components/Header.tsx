@@ -16,9 +16,6 @@ export default function Header() {
         <h1 className="truncate text-lg font-bold leading-tight text-white">
           Moda Center — Capital Program Planner
         </h1>
-        <p className="truncate text-xs font-light text-white/80">
-          CM/GC Interview Demo · Live cost &amp; phase modeling · Confidential
-        </p>
       </div>
 
       {/* Export PDF — primary action (PCL yellow). Prints the Phasing snapshot. */}
