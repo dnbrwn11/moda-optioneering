@@ -1,0 +1,311 @@
+// Right panel: selected window's story — cumulative $ (count-up tween),
+// % complete, spaces completed, window total, item count, top trades — plus
+// wedge-click item detail.
+import { useEffect, useRef, useState } from 'react'
+import type { EscalationRates, Item, PhaseId } from '../../types'
+import type { Totals } from '../../lib/escalation'
+import { escalatedCost } from '../../lib/escalation'
+import { PHASE_BY_ID } from '../../lib/phases'
+import { KIND_COLORS } from '../../lib/analytics'
+import { fmtMillions, fmtPct } from '../../lib/format'
+import { TRADE_ACCENT, TRADE_SHORT } from '../../lib/trades'
+import { levelChipStyle } from '../../lib/levels'
+import { GEOMETRY_BY_ID } from '../../data/arenaGeometry'
+import type { WindowStats } from '../../lib/sequence'
+import { color as C } from '../../lib/tokens'
+
+// Count-up tween — animates toward the target whenever it changes (window
+// scrubbing, slider moves), tracking from the currently displayed value.
+function useCountUp(target: number, duration = 500): number {
+  const [display, setDisplay] = useState(target)
+  const displayRef = useRef(target)
+  displayRef.current = display
+
+  useEffect(() => {
+    const from = displayRef.current
+    if (from === target) return
+    let raf = 0
+    const t0 = performance.now()
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - t0) / duration)
+      const eased = 1 - (1 - p) ** 3
+      setDisplay(from + (target - from) * eased)
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target, duration])
+
+  return display
+}
+
+function StatRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2 py-1.5">
+      <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">{label}</span>
+      <span className="text-sm font-bold tabular-nums text-ink">{value}</span>
+    </div>
+  )
+}
+
+// Compact floating stand-in for the collapsed panel — anchored over the
+// canvas top-right so the visual can take (almost) the full row width.
+export function CollapsedWindowCard({
+  stats,
+  totals,
+  onExpand,
+}: {
+  stats: WindowStats | null
+  totals: Totals
+  onExpand: () => void
+}) {
+  const cumulative = useCountUp(stats ? stats.cumulative : totals.escalatedTotal)
+  const kind = stats ? (PHASE_BY_ID[stats.window.phase].kind as 'offseason' | 'during-season') : null
+  return (
+    <div className="absolute right-3 top-3 z-10 w-56 rounded-md border border-line bg-white/95 p-2.5 shadow-md backdrop-blur-sm">
+      <div className="flex items-center justify-between gap-2">
+        {stats ? (
+          <span
+            className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"
+            style={{ backgroundColor: kind ? KIND_COLORS[kind] : C.ink }}
+          >
+            {stats.window.label}
+          </span>
+        ) : (
+          <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
+            Full Program
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={onExpand}
+          aria-label="Expand window panel"
+          title="Expand panel"
+          className="rounded px-1 text-sm font-bold leading-none text-ink-muted hover:text-ink"
+        >
+          ⤢
+        </button>
+      </div>
+      <div className="mt-1.5 flex items-baseline gap-1.5">
+        <span className="text-lg font-bold leading-none tabular-nums text-accent">
+          {fmtMillions(cumulative)}
+        </span>
+        <span className="text-[10px] font-medium tabular-nums text-ink">
+          {fmtPct(stats ? stats.pctComplete : 1, 0)} complete
+        </span>
+      </div>
+      {stats && (
+        <div className="mt-1 flex items-baseline justify-between gap-2 text-[11px]">
+          <span className="font-medium uppercase tracking-wider text-ink-muted">Window</span>
+          <span className="font-bold tabular-nums text-ink">
+            {fmtMillions(stats.windowTotal)}
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export interface WindowPanelProps {
+  stats: WindowStats | null // null = all-windows default state
+  totals: Totals
+  items: Item[]
+  rates: EscalationRates
+  // Reference phases for the "moved" badge — comparison scenario when Compare
+  // is on, Baseline otherwise (supplied by SequenceTab via useRefPhaseById).
+  refPhaseById: Record<string, PhaseId>
+  detailIds: string[] | null
+  onCloseDetail: () => void
+  onCollapse: () => void
+}
+
+export default function WindowPanel({
+  stats,
+  totals,
+  items,
+  rates,
+  refPhaseById,
+  detailIds,
+  onCloseDetail,
+  onCollapse,
+}: WindowPanelProps) {
+  const cumulative = useCountUp(stats ? stats.cumulative : totals.escalatedTotal)
+  const detailItems = detailIds
+    ? detailIds.map((id) => items.find((it) => it.id === id)).filter((it): it is Item => !!it)
+    : null
+
+  const kind = stats ? (PHASE_BY_ID[stats.window.phase].kind as 'offseason' | 'during-season') : null
+
+  return (
+    <aside className="relative flex flex-col gap-3 rounded-lg border border-line bg-white p-4">
+      {/* Collapse to the compact floating card over the canvas. */}
+      <button
+        type="button"
+        onClick={onCollapse}
+        aria-label="Collapse window panel"
+        title="Collapse panel"
+        className="absolute right-2 top-2 rounded px-1 text-sm font-bold leading-none text-ink-muted hover:text-ink"
+      >
+        »
+      </button>
+      {/* Window identity. */}
+      <div className="pr-5">
+        {stats ? (
+          <>
+            <div className="flex items-center gap-2">
+              <span
+                className="rounded px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white"
+                style={{ backgroundColor: kind ? KIND_COLORS[kind] : C.ink }}
+              >
+                {stats.window.label}
+              </span>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
+                {PHASE_BY_ID[stats.window.phase].name}
+              </h3>
+            </div>
+            <p className="mt-1 text-xs font-light leading-snug text-ink">
+              {stats.window.caption}
+            </p>
+          </>
+        ) : (
+          <>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
+              Full Program
+            </h3>
+            <p className="mt-1 text-xs font-light leading-snug text-ink">
+              Six construction windows, 2027–2029. Select or play a window to sequence the work.
+            </p>
+          </>
+        )}
+      </div>
+
+      {/* Cumulative — count-up tween. */}
+      <div className="rounded-md bg-panel-tint px-3 py-2.5">
+        <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
+          {stats ? 'Cumulative Escalated' : 'Program Escalated Total'}
+        </span>
+        <div className="mt-0.5 flex items-baseline gap-2">
+          <span className="text-2xl font-bold leading-none tabular-nums text-accent">
+            {fmtMillions(cumulative)}
+          </span>
+          <span className="text-xs font-medium tabular-nums text-ink">
+            {fmtPct(stats ? stats.pctComplete : 1, 0)} complete
+          </span>
+        </div>
+        {/* Progress bar. */}
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line/50">
+          <div
+            className="h-full rounded-full bg-accent"
+            style={{
+              width: `${(stats ? stats.pctComplete : 1) * 100}%`,
+              transition: 'width 600ms ease',
+            }}
+          />
+        </div>
+      </div>
+
+      {stats && (
+        <div className="divide-y divide-line/60">
+          <StatRow label="Window Escalated" value={fmtMillions(stats.windowTotal)} />
+          <StatRow label="— Systems (CONT) share" value={fmtMillions(stats.contInWindow)} />
+          <StatRow label="Scopes This Window" value={stats.itemCount} />
+          <StatRow label="Spaces Completed" value={stats.spacesCompleted} />
+        </div>
+      )}
+
+      {/* Top trades by spend (CONT folded in). */}
+      {stats && stats.topTrades.length > 0 && (
+        <div>
+          <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
+            Top Trades This Window
+          </span>
+          <div className="mt-1.5 flex flex-col gap-1.5">
+            {stats.topTrades.map((t) => {
+              const max = stats.topTrades[0].amount
+              return (
+                <div key={t.trade} className="flex items-center gap-2" title={t.trade}>
+                  <span className="w-20 shrink-0 truncate text-xs font-medium text-ink">
+                    {TRADE_SHORT[t.trade]}
+                  </span>
+                  <div className="h-2 flex-1 overflow-hidden rounded-sm bg-line/40">
+                    <div
+                      className="h-full rounded-sm"
+                      style={{
+                        width: `${max > 0 ? (t.amount / max) * 100 : 0}%`,
+                        backgroundColor: TRADE_ACCENT[t.trade],
+                        transition: 'width 600ms ease',
+                      }}
+                    />
+                  </div>
+                  <span className="w-14 shrink-0 text-right text-xs font-bold tabular-nums text-ink">
+                    {fmtMillions(t.amount)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Item detail — wedge click. */}
+      {detailItems && detailItems.length > 0 && (
+        <div className="rounded-md border border-line bg-card-tint p-3">
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">
+              {detailItems.length > 1 ? 'Distributed Scopes' : 'Scope Detail'}
+            </span>
+            <button
+              type="button"
+              onClick={onCloseDetail}
+              aria-label="Close scope detail"
+              className="text-xs font-bold text-ink-muted hover:text-ink"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="mt-1.5 flex max-h-56 flex-col gap-2 overflow-y-auto">
+            {detailItems.map((it) => {
+              const def = PHASE_BY_ID[it.phase]
+              const moved = refPhaseById[it.id] !== undefined && refPhaseById[it.id] !== it.phase
+              const note = GEOMETRY_BY_ID[it.id]?.note
+              return (
+                <div key={it.id} className="border-b border-line/60 pb-2 last:border-b-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-bold leading-tight text-ink">{it.name}</span>
+                    <span
+                      className="shrink-0 rounded border px-1 py-0.5 text-[10px] font-bold"
+                      style={levelChipStyle(it.level)}
+                    >
+                      {it.level}
+                    </span>
+                  </div>
+                  <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2 text-xs text-ink">
+                    <span className="font-medium">{it.trade}</span>
+                    <span>·</span>
+                    <span>{def.year === null ? 'Continuous' : def.name}</span>
+                    {moved && (
+                      <span className="font-bold text-brand-yellow-ink" title="Phase differs from the reference scenario (comparison when Compare is on, Baseline otherwise)">
+                        ◆ moved
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-0.5 text-sm font-bold tabular-nums text-accent">
+                    {it.included ? fmtMillions(escalatedCost(it, rates)) : 'Excluded — $0'}
+                  </div>
+                  {note && <p className="mt-0.5 text-[11px] font-light italic text-ink-muted">{note}</p>}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Reconciliation note — the six windows fold CONT straight-line and sum
+          exactly to the escalated headline. */}
+      <p className="mt-auto pt-1 text-[10px] font-light leading-snug text-ink-muted">
+        Six windows (systems folded in) sum to {fmtMillions(totals.escalatedTotal)} — matches the
+        escalated headline. Values recompute live from escalation rates and phase assignments.
+      </p>
+    </aside>
+  )
+}

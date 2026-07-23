@@ -1,0 +1,126 @@
+/* Self-hosted Barlow — woff2 files bundled in src/fonts/.
+   No Google Fonts CDN; the app renders fully offline. */
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./fonts/barlow-300.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/barlow-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./fonts/barlow-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/barlow-700.woff2') format('woff2');
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens — CSS-land mirror of src/theme/tokens.json (the authority).
+   Keep values in sync by hand when the token file changes. */
+:root {
+  --accent: #005d2f;
+  --accent-hover: #00753b;
+  --accent-tint: #f0f7f2;
+  --chrome: #005d2f;
+  --chrome-deep: #005d2f;
+  --ink: #36383d;
+  --ink-muted: #a6a6a6;
+  --surface: #ffffff;
+  --surface-alt: #f4f4f3;
+  --line: #cfcfcf;
+  --gridline: #ececeb;
+  --silver: #cfcfcf;
+  --alert: #d83c31;
+  --gold: #c9a227;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Barlow', system-ui, sans-serif;
+  font-weight: 300;
+  background-color: var(--surface-alt);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Calm, restrained slider styling (accent track fill via accent-color). */
+input[type='range'] {
+  accent-color: var(--accent);
+}
+
+/* Sequence-tab floating tooltip fade-in (~100ms). */
+@keyframes seq-tip-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Print / Export PDF. The interactive app is hidden (.screen-app → display:none)
+   and a dedicated screen-hidden report (.print-report) is revealed. Pure print
+   CSS + window.print(); no runtime layout is affected on screen.
+   --------------------------------------------------------------------------- */
+@media print {
+  html,
+  body,
+  #root {
+    height: auto !important;
+    background: #fff !important;
+  }
+  body {
+    color: #000 !important;
+  }
+  @page {
+    margin: 14mm 12mm 20mm;
+  }
+  .screen-app {
+    display: none !important;
+  }
+  .print-report {
+    display: block !important;
+    /* Keep PCL green accents + bar fills through the print pipeline. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Confidential marking repeats on every printed page. */
+  .print-footer {
+    position: fixed;
+    bottom: 6mm;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 500;
+    color: #555;
+  }
+  /* Keep a phase section (and each row) together where it fits on a page. */
+  .avoid-break {
+    break-inside: avoid;
+  }
+}

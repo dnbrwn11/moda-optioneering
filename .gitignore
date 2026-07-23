@@ -1,0 +1,18 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+*.log
+.env
+backup/
+scripts/data/
+
+# build + tooling artifacts
+*.tsbuildinfo
+.claude/
+
+# build + tooling artifacts
+*.tsbuildinfo
+vite.config.d.ts
+.claude/
