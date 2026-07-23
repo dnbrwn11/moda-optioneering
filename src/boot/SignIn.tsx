@@ -53,6 +53,18 @@ const CSS = `
 .gate-root .hero h1 .thin{font-weight:400;color:var(--silver)}
 .gate-root .hero .rule{width:64px;height:4px;background:var(--scarlet);margin:28px 0 20px}
 .gate-root .hero p{color:var(--text-muted);font-size:15.5px;line-height:1.6;max-width:44ch}
+.gate-root .thanks{
+  margin-top:28px;max-width:44ch;
+  border:1px solid rgba(224,58,62,.35);
+  background:rgba(224,58,62,.07);
+  border-radius:8px;padding:16px 18px;
+}
+.gate-root .thanks .tag{
+  font-size:11px;font-weight:600;letter-spacing:1.8px;
+  text-transform:uppercase;color:var(--silver);margin-bottom:8px;
+}
+.gate-root .thanks .tag .slashes{color:var(--scarlet);letter-spacing:1px;margin-right:8px}
+.gate-root .thanks p{color:var(--text-muted);font-size:14px;line-height:1.6;max-width:none}
 .gate-root .datastrip{
   display:flex;gap:36px;border-top:1px solid var(--line-dark);
   padding-top:24px;padding-right:200px;flex-wrap:wrap;
@@ -176,6 +188,16 @@ export default function SignIn({ notice }: { notice: string | null }) {
               Live cost, phasing, and sequencing model for the Moda Center renovation — built and
               maintained by PCL preconstruction. Access is limited to invited project stakeholders.
             </p>
+
+            <div className="thanks">
+              <div className="tag">
+                <span className="slashes">///</span>From the PCL team
+              </div>
+              <p>
+                Thank you for the opportunity to present. PCL is committed to the Moda Center — and
+                ready to get to work alongside you.
+              </p>
+            </div>
           </div>
 
           <div className="datastrip">
